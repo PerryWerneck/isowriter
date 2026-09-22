@@ -13,6 +13,7 @@ app_src = [
 ]
 
 lib_src = [
+	'src/library/testcases.cc',
 	'src/library/group.cc',
 ]
 
@@ -132,6 +133,8 @@ conf_data.set_quoted('LOCALEDIR',get_option('prefix') + '/' + get_option('locale
 conf_data.set('application_description',project_description)
 conf_data.set('application_icon','@0@.@1@'.format(libudjat.get_variable('product_domain'),meson.project_name()))
 conf_data.set('application_name', meson.project_name())
+
+conf_data.set('STATIC_MODULES',1)
 
 if fatfs.found()
 	conf_data.set('HAVE_FATFS', 1)

@@ -25,11 +25,13 @@
  #include <private/application.h>
  #include <udjat/tools/properties.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/configuration.h>
  #include <stdexcept>
  #include <vector>
  #include <udjat/tools/string.h>
  #include <udjat/tools/intl.h>
  #include <reinstall/group.h>
+ #include <udjat/module/http.h>
 
  using namespace Udjat;
  using namespace std;
@@ -52,6 +54,49 @@
 	}
 
 	int Application::run() {
+
+#ifdef STATIC_MODULES
+		//
+		// Load modules
+		//
+		{
+#ifndef _WIN32
+			// if(Config::Value<bool>{"modules","grub2",true}) {
+
+			// 	Reinstall::Grub2::Module::Factory("grub");
+
+			// 	if(Config::Value<bool>{"application","legacy",false}) {
+			// 		Reinstall::Grub2::Module::Factory("grub");
+			// 	}
+
+			// }
+#endif
+
+			if(Config::Value<bool>{"modules","http",true}) {
+				Logger::String{"Loading http module"}.info();
+				Udjat::HTTP::Module::Factory();
+			}
+
+			// if(Config::Value<bool>{"modules","isowriter",true}) {
+			// 	Logger::String{"Loading isowriter module"}.info();
+			// 	Reinstall::IsoWriter::Module::Factory();
+			// }
+
+			// if(Config::Value<bool>{"modules","isobuilder",true}) {
+
+			// 	Logger::String{"Loading isobuilder module"}.info();
+			// 	Reinstall::IsoBuilder::Module::Factory();
+
+			// 	if(Config::Value<bool>{"application","legacy",false}) {
+			// 		Logger::String{"Loading network-installer module (legacy)"}.info();
+			// 		Reinstall::IsoBuilder::Module::Factory("netinstall","network-installer");
+			// 	}
+
+			// }
+
+
+		}		
+#endif // STATIC_MODULES
 
 		//
 		// Load options

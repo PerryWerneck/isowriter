@@ -36,6 +36,11 @@
 
  #include <private/application.h>
 
+#ifdef DEBUG
+ #include <udjat/tools/testsuite.h>
+ #include <udjat/module/http.h>
+#endif // DEBUG
+
 #ifdef HAVE_GTKMM
  static bool has_graphical_session();
 #endif
@@ -63,6 +68,12 @@
 	// Set locale.
 	Udjat::Application::set_gettext_package(GETTEXT_PACKAGE);
 #endif // GETTEXT_PACKAGE
+
+#ifdef DEBUG
+	Udjat::Config::allow_user_homedir(true);
+	Logger::verbosity(9);
+	Logger::console(true);
+#endif
 
 	//
 	// Check defaults
@@ -115,6 +126,32 @@
 					return Result::Handled;
 				}
 			},
+#ifdef DEBUG
+			Argument{
+				'i', "interactive-testcases", "Run testsuite",
+                [](const char *arg, char) {
+
+#ifdef STATIC_MODULES
+				Logger::String{"Loading http module"}.info();
+				Udjat::HTTP::Module::Factory();
+#endif // STATIC_MODULES
+
+					TestSuite testsuite;
+					udjat_register_tests(testsuite);
+					testsuite.load();
+
+					if(arg && *arg) {
+						testsuite.run(arg);
+					} else {
+						testsuite.interactive();
+					}
+
+					Udjat::Module::unload();
+
+					return Result::ExitNow;
+				}
+			},
+#endif // DEBUG
 #ifdef HAVE_GTKMM
 			Argument{
 				't', "tui", _("Run in text mode"),
@@ -193,12 +230,6 @@
 	//
 	// Start application
 	//
-#ifdef DEBUG
-	Udjat::Config::allow_user_homedir(true);
-	Logger::verbosity(9);
-	Logger::console(true);
-#endif
-
 #ifdef HAVE_GTKMM
 	if(ui_mode == GUI) {
 		Logger::String{"Starting graphical mode"}.trace();
