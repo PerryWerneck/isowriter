@@ -190,7 +190,7 @@
 			},
 			_("Network options"),
 			Argument{
-				'i', "install", _("Set URL for installation repository"), "url",
+				'I', "install", _("Set URL for installation repository"), "url",
                 [](const char *arg, char) {
 					return Result::Handled;
 				}

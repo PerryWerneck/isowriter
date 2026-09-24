@@ -24,8 +24,14 @@
  #include <udjat/defs.h>
  #include <udjat/tools/testsuite.h>
  #include <udjat/tools/logger.h>
+ #include <memory>
+
+ #include <reinstall/tools/builder.h>
+ #include <reinstall/tools/datasource.h>
 
  using namespace Udjat;
+ using namespace Reinstall;
+ using namespace std;
 
  UDJAT_API void udjat_register_tests(Udjat::TestSuite &suite) noexcept {
 
@@ -34,6 +40,16 @@
 		TestSuite::Case{
 			"isobuilder", "Test ISOBuilder",
 			[](std::ostream &stream) {
+
+				class TestBuilder : Builder {
+				public:
+					TestBuilder() : Builder{"testcase"} {
+						push_back(make_shared<Builder::Kernel>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/linux"));
+						push_back(make_shared<Builder::InitRD>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/initrd"));
+					}
+				};
+
+				TestBuilder builder;
 
 
 				return "ISOBuilder test passed";

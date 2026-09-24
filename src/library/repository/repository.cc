@@ -222,7 +222,7 @@
 
 					auto progress = Dialog::Progress::getInstance();
 					progress->url(_("Loading repository index"));
-					url.get(filename.c_str(),[&progress](double current, double total){
+					url.get(filename.c_str(),[&progress](uint64_t current, uint64_t total){
 						progress->set(current,total);
 						return false;
 					});
@@ -236,7 +236,7 @@
 
 					auto progress = Dialog::Progress::getInstance();
 					progress->url(_("Loading repository index"));
-					filename = url.tempfile([&progress](double current, double total){
+					filename = url.tempfile([&progress](uint64_t current, uint64_t total){
 						progress->set(current,total);
 						return false;
 					});
