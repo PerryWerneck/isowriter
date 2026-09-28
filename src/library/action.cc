@@ -21,6 +21,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/logger.h>
  #include <reinstall/action.h>
+ #include <reinstall/dialog.h>
  #include <udjat/tools/activatable.h>
  #include <udjat/tools/intl.h>
  #include <udjat/tools/application.h>
@@ -34,7 +35,7 @@
 		if(props.contains("model")) {
 
 			auto name = props["model"];
-			Logger::String{"Building action using model '", name.c_str(),"' for node '",props.path(),"'"}.trace(logname.c_str());
+			Logger::String{"Building action using model '", name.c_str(),"' for node '",props.path(),"'"}.trace(this->c_str());
 
 	#ifdef DEBUG
 			String path{getenv("PWD")};

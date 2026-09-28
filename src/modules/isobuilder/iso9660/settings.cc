@@ -50,6 +50,10 @@
 			volume_id = XML::QuarkFactory(node,"system-name");
 		}
 
+		if(!*volume_id) {
+			volume_id = XML::QuarkFactory(node,"disk-label");
+		}
+
 		publisher_id = XML::QuarkFactory(node,"publisher-id");
 
 		// Use the username as data preparer id if not set.

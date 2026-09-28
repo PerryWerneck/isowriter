@@ -33,7 +33,7 @@
 
  namespace Reinstall {
 
-	class UDJAT_API Dialog {
+	class UDJAT_API Dialog : public std::string {
 	public:
 
 		enum Option : uint8_t {
@@ -51,7 +51,7 @@
 
 		static Option OptionFactory(const char *name);
 
-		Dialog() = default;
+		Dialog(const char *name);
 
 		Dialog(const Udjat::Properties &node, const char *message = "", const Option option = None);
 		virtual ~Dialog() = default;

@@ -49,6 +49,8 @@
  #include <fatfs/ff.h>
  #include <fatfs/diskio.h>
 
+ #error Implement f_setlabel using attribute disk-label. 
+
  using namespace Udjat;
  using namespace std;
 

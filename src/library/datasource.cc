@@ -56,6 +56,15 @@
 			throw runtime_error("At least one URL is required");
 		}
 
+		// Sanitize
+		if(this->local[0] == '/') {
+			this->local = String{".",this->local.c_str()}.c_str();
+		}
+
+		if(this->remote[0] == '/') {
+			this->remote = String{".",this->remote.c_str()}.c_str();
+		}
+
 	}
 
 	/// @brief Build URL using properties.

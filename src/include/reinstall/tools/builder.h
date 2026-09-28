@@ -37,13 +37,16 @@
 		/// @brief System kernel.
 		class Kernel : public Reinstall::DataSource {
 		public:
-			Kernel(const char *remote, const char *local = nullptr);
+			Kernel(const char *remote, const char *local = nullptr) : DataSource{remote,local} {		
+			}
+
 		};
 
 		/// @brief System initrd
 		class InitRD : public Reinstall::DataSource {
 		public:
-			InitRD(const char *remote, const char *local = nullptr);
+			InitRD(const char *remote, const char *local = nullptr) : DataSource{remote,local} {		
+			}
 
 		};
 

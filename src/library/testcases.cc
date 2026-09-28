@@ -26,6 +26,11 @@
  #include <udjat/tools/logger.h>
  #include <memory>
 
+ #ifdef HAVE_FATFS
+	#include <fatfs/ff.h>
+	#include <fatfs/diskio.h>
+ #endif // HAVE_FATFS
+
  #include <reinstall/tools/builder.h>
  #include <reinstall/tools/datasource.h>
 
@@ -37,19 +42,24 @@
 
 	suite.add(
 		PACKAGE_NAME " Tests",
-		TestSuite::Case{
+#if defined(HAVE_FATFS)
+		 TestSuite::Case{
+			"fatfs", "Test FatFS",
+			[](std::ostream &stream) {
+
+
+
+				return "FatFS test passed";
+			}
+		},
+#endif // HAVE_FATFS 
+		 TestSuite::Case{
 			"isobuilder", "Test ISOBuilder",
 			[](std::ostream &stream) {
 
-				class TestBuilder : Builder {
-				public:
-					TestBuilder() : Builder{"testcase"} {
-						push_back(make_shared<Builder::Kernel>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/linux"));
-						push_back(make_shared<Builder::InitRD>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/initrd"));
-					}
-				};
-
-				TestBuilder builder;
+				Builder builder{"test"};
+				builder.push_back(make_shared<Builder::Kernel>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/linux"));
+				builder.push_back(make_shared<Builder::InitRD>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/initrd"));
 
 
 				return "ISOBuilder test passed";

@@ -185,6 +185,7 @@
 
 	bool Application::push_back(const Udjat::Properties &props,std::shared_ptr<Action> action) {
 		find_group(props)->push_back(props,action);
+		return true;
 	}
 
  }

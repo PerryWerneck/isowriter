@@ -34,6 +34,8 @@
  using namespace Udjat;
  using namespace std;
 
+ #error TODO: Implement label on fat image.
+ 
  namespace FatFS {
 
 	// Reference: http://elm-chan.org/fsw/ff/doc/mkfs.html

@@ -37,7 +37,9 @@
 
 	public:
 
-		Action(const char *name);
+		Action(const char *name) : Udjat::String{name} {
+		}
+
 		Action(const Udjat::Properties &node);
 		virtual ~Action();
 

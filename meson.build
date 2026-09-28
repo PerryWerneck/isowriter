@@ -16,6 +16,9 @@ lib_src = [
 	'src/library/testcases.cc',
 	'src/library/group.cc',
 	'src/library/datasource.cc',
+	'src/library/action.cc',
+	'src/library/builder.cc',
+	'src/library/ui/dialog.cc',
 ]
 
 project_description = 'Installation media creation tool'

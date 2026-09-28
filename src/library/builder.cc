@@ -33,34 +33,38 @@
  namespace Reinstall {
 
 	Builder::Builder(const Udjat::Properties &props) : Reinstall::Action{props["name"].as_quark()} {
-
-
-
 	}
 
-	void Builder::push_back(std::shared_ptr<Reinstall::DataSource> source) {
+	bool Builder::push_back(std::shared_ptr<Reinstall::DataSource> source) {
 		
 		{
 			auto k = dynamic_pointer_cast<Kernel>(source);
-			if(k && !kernel) {
+			if(k) {
+
+				// It's a kernel object, only insert the first one.
+				if(kernel) {
+					Logger::String{"Kernel was already inserted"}.write(Logger::Debug);
+					debug("Kernel was already inserted");
+					return false;
+				}
 				kernel = k;
 			}
 		}
 
 		{
 			auto i = dynamic_pointer_cast<InitRD>(source);
-			if(i && !initrd) {
+			if(i) {
+				// It's an InitRD object, only insert the first one.
+				if(initrd) {
+					Logger::String{"InitRD was already inserted"}.write(Logger::Debug);
+					return false;
+				}
 				initrd = i;
 			}
 		}
 
 		sources.push_back(source);
-		
-	}
-
-	void Builder::prepare() {
-
-
+		return true;
 	}
 
  }

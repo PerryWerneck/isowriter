@@ -35,12 +35,13 @@
 
 		/// @brief ISO9660 image definitions.
 		struct Settings {
-			uint8_t type = 0;		///< @brief Image type (FAT/FAT32/EXFAT).
-			uint8_t n_fats = 0;		///< @brief Specifies number of FAT copies on the FAT/FAT32 volume.
-			uint32_t align = 0;		///< @brief Specifies alignment of the volume data area (file allocation pool, usually erase block boundary of flash memory media) in unit of sector.
-			uint32_t n_root = 0;	///< @brief Specifies number of root directory entries on the FAT volume.
-			uint32_t au_size = 0;	///< @brief Specifies size of the cluster (allocation unit) in unit of byte.
-			uint64_t imglen = 0LL;	///< @brief The image length.
+			uint8_t type = 0;				///< @brief Image type (FAT/FAT32/EXFAT).
+			uint8_t n_fats = 0;				///< @brief Specifies number of FAT copies on the FAT/FAT32 volume.
+			uint32_t align = 0;				///< @brief Specifies alignment of the volume data area (file allocation pool, usually erase block boundary of flash memory media) in unit of sector.
+			uint32_t n_root = 0;			///< @brief Specifies number of root directory entries on the FAT volume.
+			uint32_t au_size = 0;			///< @brief Specifies size of the cluster (allocation unit) in unit of byte.
+			uint64_t imglen = 0LL;			///< @brief The image length.
+			const char *label = nullptr;    ///< @brief The image label.
 
 			Settings(const Udjat::Properties &node);
 
