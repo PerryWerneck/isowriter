@@ -105,7 +105,7 @@
 	public:
 		Disk(const std::shared_ptr<Settings> settings) : Reinstall::Abstract::Disk{Udjat::File::Handler::fd, settings->imglen} {
 
-			if(disk_ioctl(0, CTRL_FORMAT, &fd) != RES_OK) {
+			if(disk_ioctl(0, CTRL_BIND_FD, &fd) != RES_OK) {
 				throw runtime_error(_("Cant bind fatfs to disk image"));
 			}
 

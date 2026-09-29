@@ -16,6 +16,7 @@ lib_src = [
 	'src/library/testcases.cc',
 	'src/library/group.cc',
 	'src/library/datasource.cc',
+	'src/library/repository/repository.cc',
 	'src/library/action.cc',
 	'src/library/builder.cc',
 	'src/library/ui/dialog.cc',
@@ -74,11 +75,11 @@ libisofs =	dependency('libisofs-1',required: false)
 libarchive = dependency('libarchive', required: false)
 zlib= dependency('zlib', required: false)
 
-fatfs =	dependency(
-	'libfatfs',
-	static: true,
-	fallback: [ 'libfatfs' ],
-	default_options: ['default_library=static'],
+fatfs = dependency(
+  'libfatfs',
+  static: true,
+  fallback: [ 'libfatfs' ],
+  default_options: ['default_library=static'],
 )
 
 libudjat = dependency(

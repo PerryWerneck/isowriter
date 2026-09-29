@@ -4,4 +4,4 @@ revision = develop
 depth = 1
 
 [provide]
-libfatfs = static_library
+libfatfs = libfatfs_dep

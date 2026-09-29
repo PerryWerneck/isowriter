@@ -67,6 +67,11 @@
 		return true;
 	}
 
+	void Action::activate() {
+		
+	}
+
+
  }
 
 //  /**

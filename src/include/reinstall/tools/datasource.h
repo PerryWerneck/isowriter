@@ -25,13 +25,21 @@
 
  namespace Reinstall {
 
+	class Repository;
+
 	class UDJAT_API DataSource {
 	protected:
-		Udjat::URL local;		///< @brief URL for local file.
-		Udjat::URL remote;		///< @brief URL for remote file.
+		std::shared_ptr<Repository> repo;	///< @brief Repository for relative URLs.
+		Udjat::URL local;					///< @brief URL for local file.
+		Udjat::URL remote;					///< @brief URL for remote file.
 		bool allow_cache;
 
 	public:
+
+		/// @brief Build datasource.
+		/// @param repository The repository.
+		/// @param path Relative path for files inside repository.
+		DataSource(std::shared_ptr<Repository> repository, const char *path);
 	
 		/// @brief Build datasource.
 		/// @param remote URL for remote files.

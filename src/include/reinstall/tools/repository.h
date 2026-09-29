@@ -22,102 +22,132 @@
   */
 
  #pragma once
-
  #include <udjat/defs.h>
+ #include <udjat/tools/url.h>
  #include <udjat/tools/properties.h>
- #include <udjat/tools/object.h>
- #include <memory>
- #include <vector>
-
- #include <reinstall/tools/datasource.h>
- #include <reinstall/tools/kernelparameter.h>
 
  namespace Reinstall {
 
-	class SLPClient;
-
-	class UDJAT_API Repository : public FileSource, public KernelParameter {
-	private:
-
-		/// @brief Command-line preset.
-		struct Preset {
-			const char *name;
-			const char *value;
-			Preset(const char *name, const char *value);
-		};
-
-		static std::vector<Preset> presets;
-
-		struct KParm {
-			bool enabled = true;
-			const char *name = nullptr;
-			const char *slp = nullptr;
-
-			KParm(const Udjat::Properties &node);
-
-		} kparm;
-
-		std::shared_ptr<SLPClient> slpclient;
-
-		/// @brief The repository files (from INDEX.gz)
-		std::vector<std::string> files;
-
-		/// @brief Load index from filename.
-		bool index(const char *filename);
+	class UDJAT_API Repository {
+	protected:
+		Udjat::URL local;		///< @brief URL for local file.
+		Udjat::URL remote;		///< @brief URL for remote file.
+		bool allow_cache;
 
 	public:
+	
+		/// @brief Build datasource.
+		/// @param remote URL for remote files.
+		/// @param local URL for local files.
+		Repository(const char *remote = nullptr, const char *local = nullptr);
 
-		static std::shared_ptr<Repository> Factory(const Udjat::Properties &node);
+		/// @brief Build URL using properties.
+		/// @param props The properties for URL.
+		Repository(const Udjat::Properties &props);
 
-		Repository(const Udjat::Properties &node);
 		virtual ~Repository();
 
-		bool operator==(const Repository &repo) const noexcept;
-
-		inline bool is_kernel_parameter() const noexcept {
-			return kparm.name && *kparm.name;
-		}
-
-		/// @brief Override xml defined remote URL.
-		static inline void preset(const char *name, const char *value) {
-			presets.emplace_back(name,value);
-		}
-
-		static void preset(const char *arg);
-
-		// KernelParameter
-		std::string value(const Udjat::Abstract::Object &object) const override;
-
-		/// @brief Load repository index (INDEX.gz)
-		/// @return true if the repository has an index.
-		bool index();
-
-		const char * remote() const override;
-
-#if __cplusplus >= 201703L
-
-		inline const auto begin() const noexcept {
-			return files.begin();
-		}
-
-		inline const auto end() const noexcept {
-			return files.end();
-		}
-
-#else
-
-		inline std::vector<std::string>::const_iterator begin() const noexcept {
-			return files.begin();
-		}
-
-		inline std::vector<std::string>::const_iterator end() const noexcept {
-			return files.end();
-		}
-
-#endif
+		Udjat::URL url(bool remote = true);
 
 	};
 
  }
+
+//  #include <udjat/defs.h>
+//  #include <udjat/tools/properties.h>
+//  #include <udjat/tools/object.h>
+//  #include <memory>
+//  #include <vector>
+
+//  #include <reinstall/tools/datasource.h>
+//  #include <reinstall/tools/kernelparameter.h>
+
+//  namespace Reinstall {
+
+// 	class SLPClient;
+
+// 	class UDJAT_API Repository : public FileSource, public KernelParameter {
+// 	private:
+
+// 		/// @brief Command-line preset.
+// 		struct Preset {
+// 			const char *name;
+// 			const char *value;
+// 			Preset(const char *name, const char *value);
+// 		};
+
+// 		static std::vector<Preset> presets;
+
+// 		struct KParm {
+// 			bool enabled = true;
+// 			const char *name = nullptr;
+// 			const char *slp = nullptr;
+
+// 			KParm(const Udjat::Properties &node);
+
+// 		} kparm;
+
+// 		std::shared_ptr<SLPClient> slpclient;
+
+// 		/// @brief The repository files (from INDEX.gz)
+// 		std::vector<std::string> files;
+
+// 		/// @brief Load index from filename.
+// 		bool index(const char *filename);
+
+// 	public:
+
+// 		static std::shared_ptr<Repository> Factory(const Udjat::Properties &node);
+
+// 		Repository(const Udjat::Properties &node);
+// 		virtual ~Repository();
+
+// 		bool operator==(const Repository &repo) const noexcept;
+
+// 		inline bool is_kernel_parameter() const noexcept {
+// 			return kparm.name && *kparm.name;
+// 		}
+
+// 		/// @brief Override xml defined remote URL.
+// 		static inline void preset(const char *name, const char *value) {
+// 			presets.emplace_back(name,value);
+// 		}
+
+// 		static void preset(const char *arg);
+
+// 		// KernelParameter
+// 		std::string value(const Udjat::Abstract::Object &object) const override;
+
+// 		/// @brief Load repository index (INDEX.gz)
+// 		/// @return true if the repository has an index.
+// 		bool index();
+
+// 		const char * remote() const override;
+
+// #if __cplusplus >= 201703L
+
+// 		inline const auto begin() const noexcept {
+// 			return files.begin();
+// 		}
+
+// 		inline const auto end() const noexcept {
+// 			return files.end();
+// 		}
+
+// #else
+
+// 		inline std::vector<std::string>::const_iterator begin() const noexcept {
+// 			return files.begin();
+// 		}
+
+// 		inline std::vector<std::string>::const_iterator end() const noexcept {
+// 			return files.end();
+// 		}
+
+// #endif
+
+// 	};
+
+//  }
 
 

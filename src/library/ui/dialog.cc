@@ -49,6 +49,66 @@
 
 	}
 
+	Dialog::Option Dialog::OptionFactory(const char *name) {
+		static const struct {
+			const char *name;
+			Option option;
+		} button_names[] = {
+			{ "reboot", 	Reboot		},
+			{ "continue", 	Continue	},
+			{ "quit", 		Quit		},
+			{ "cancel", 	Cancel		},
+		};
+		for(const auto &button : button_names) {
+			if(strcasecmp(name,button.name) == 0) {
+				return button.option;
+			}
+		}
+		return Option::None;
+	}
+
+	void Dialog::set(const Dialog::Option option) {
+
+	}
+
+	void Dialog::preset(const Dialog::Option option) noexcept {
+
+	}
+
+	bool Dialog::has_preset(const Option option) noexcept {
+
+	}
+
+
+	/// @brief Ask for confirmation.
+	bool Dialog::ask(bool default_response) const noexcept {
+		return default_response;
+	}
+	
+	bool Dialog::present(const char *) const noexcept {
+		return false;
+	}
+
+	const char * Dialog::text(const char *def) const noexcept {
+
+	}
+
+	const char * Dialog::body(const char *def) const noexcept {
+
+	}
+
+	void Dialog::quit() const {
+
+	}
+
+	void Dialog::cancel() const {
+
+	}
+
+	void Dialog::reboot() const {
+
+	}
+
  }
 
 

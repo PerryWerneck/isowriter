@@ -23,6 +23,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/url.h>
  #include <reinstall/tools/datasource.h>
+ #include <reinstall/tools/repository.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/configuration.h>
  #include <cstdio>
@@ -34,6 +35,9 @@
  using namespace std;
 
  namespace Reinstall {
+
+	DataSource::DataSource(std::shared_ptr<Repository> repository, const char *path) : repo{repository}, remote{path} {
+	}
 
 	DataSource::DataSource(const char *remote, const char *local) {
 		
@@ -54,15 +58,6 @@
 
 		if(this->local.empty() && this->remote.empty()) {
 			throw runtime_error("At least one URL is required");
-		}
-
-		// Sanitize
-		if(this->local[0] == '/') {
-			this->local = String{".",this->local.c_str()}.c_str();
-		}
-
-		if(this->remote[0] == '/') {
-			this->remote = String{".",this->remote.c_str()}.c_str();
 		}
 
 	}
@@ -111,15 +106,39 @@
 		}
 
 		if(remote.empty()) {
-			return local;
+			URL u = local.c_str();
+			if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
+				u = repo->url(false).c_str();
+				u += remote.c_str();
+			}
+			return u;
+		}
+
+		URL u = remote.c_str();
+		if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
+			u = repo->url().c_str();
+			u += remote.c_str();
 		}
 
 		if(allow_cache) {
 
+			if(!strcmp(local.hostname().c_str(),LOCAL_TMP)) {
+				// Already cached, just return it.
+				return local;
+			}
+
 			// TODO: Initialize progress bar.
 			
-			debug("Downloading ",remote.c_str());
-			if(local.empty()) {
+			debug("Downloading ",u.c_str());
+
+			// Check if local is relative.
+			URL u = local.c_str();
+			if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
+				u = repo->url(false).c_str();
+				u += local.c_str();
+			}
+
+			if(u.empty() || !u.local()) {
 
 				// No local, create temporary path.
 				auto filename = remote.tempfile([](uint64_t current, uint64_t total){
@@ -127,15 +146,18 @@
 					return false;
 				});
 
-				local = String{"file://" LOCAL_TMP "/",filename.c_str()};
+				local = String{"file://" LOCAL_TMP "/",filename.c_str()}.c_str();
 
 			} else {
 
 				// Has local, check if it's updated.
-				remote.get(local.path().c_str(),[](uint64_t current, uint64_t total){
+
+				remote.get(u.path().c_str(),[](uint64_t current, uint64_t total){
 					// TODO: Update progress bar.
 					return false;
 				});
+
+				local = u.c_str();
 			
 			}
 
