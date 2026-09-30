@@ -30,20 +30,34 @@
  namespace FatFS {
 
 	class UDJAT_API Image {
-	private:
-		int fd = -1;
-		
 	public:
 		struct Settings {
 			MKFS_PARM parms = { FM_FAT32, 0, 0, 0, 0};	///< Format parameter structure used for f_mkfs()
 			LBA_t plist[FF_VOLUMES] = { 100, 0, 0, 0 };
 		};
 
-		Image(const Settings &settings, int fd);
+		/// @brief Build a new fat disk image.
+		/// @param settings Settings for new image.
+		/// @param filename The image file name.
+		/// @param length The image length.
 		Image(const Settings &settings, const char *filename, unsigned long long length);
+
 		~Image();
 
+		/// @brief Add file on fat device or image.
+		/// @param url The URL for the source file.
+		/// @param path The path for file inside fat image.
 		void push_back(const Udjat::URL &url, const char *path);
+
+	private:
+
+		/// @brief The handle of fat device.
+		int fd = -1;
+
+		/// @brief Initialize an empty fat file or device.
+		/// @param settings The settings for new image.
+		/// @param fd File handle of fat device (or image file).
+		Image(const Settings &settings, int fd);
 
 	};
 
