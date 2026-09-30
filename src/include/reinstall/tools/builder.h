@@ -81,6 +81,11 @@
 		bool push_back(std::shared_ptr<Reinstall::DataSource> source);
 		bool push_back(std::shared_ptr<KernelParameter> kparm);
 
+		/// @brief Iterate from all builder files.
+		/// @param task The tastk to be called on every file.
+		/// @return true if the enumaration was interrupted by task 'true' return.
+		bool for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const;
+
 	private:
 		std::vector<std::shared_ptr<Reinstall::DataSource>> sources;
 		std::vector<std::shared_ptr<KernelParameter>> kparms;

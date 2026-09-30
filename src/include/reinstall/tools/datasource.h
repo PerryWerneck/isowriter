@@ -58,6 +58,11 @@
 		/// @brief Get URL for datasource file.
 		Udjat::URL url();
 
+		/// @brief Iterate from all source files.
+		/// @param task The tastk to be called on every file.
+		/// @return true if the enumaration was interrupted by task 'true' return.
+		bool for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const;
+
 	};
 
  }

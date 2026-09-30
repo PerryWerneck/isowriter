@@ -67,6 +67,17 @@
 		return true;
 	}
 
+	bool Builder::for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const {
+
+		for(auto source : sources) {
+			if(source->for_each(task)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
  }
 
 //  #include <udjat/tools/properties.h>

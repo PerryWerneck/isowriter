@@ -36,6 +36,7 @@
  #ifdef HAVE_FATFS
 	#include <fatfs/ff.h>
 	#include <fatfs/diskio.h>
+	#include <reinstall/modules/fatfs.h>
  #endif // HAVE_FATFS
 
  #include <reinstall/tools/builder.h>
@@ -76,57 +77,12 @@
 				// Create file
 				#define IMAGE_SIZE (1ULL * 1024 * 1024 * 1024) // 1 GB in bytes
 
-				unlink("test_image.fat");
-				int fd = open("test_image.fat", O_RDWR | O_CREAT | O_TRUNC, 0644);
-				if(fd < 0) {
-					throw system_error(errno,system_category(),"test_tmage.fat");
-				}
+				unlink("/tmp/test.iso");
 
-				if (ftruncate(fd, IMAGE_SIZE) == -1) {
-					int err = errno;
-					::close(fd);
-					throw system_error(err,system_category(),"Error setting the file size");
-				}
+				FatFS::Image::Settings settings;
+				FatFS::Image disk{settings,"/tmp/test.iso",IMAGE_SIZE};
 
-				stream << "Successfully allocated " << IMAGE_SIZE << " (1 GB)." << endl;
 
-				if(disk_ioctl(0, CTRL_BIND_FD, &fd) != RES_OK) {
-					throw runtime_error("Cant bind fatfs to disk image");
-				}
-
-				{
-					// Create a single FAT partition covering the whole image
-					LBA_t plist[] = {100, 0, 0, 0};	// 100% on partition 1
-					BYTE work[FF_MAX_SS];
-					memset(work, 0, sizeof(work));
-					auto rc = f_fdisk(0, plist, work);
-					if(rc != FR_OK) {
-						throw runtime_error(Logger::Message{"f_fdisk failed with error '{}', ({})", f_strerror(rc), rc});
-					}				
-				}
-
-				{
-
-					// Format
-					static const MKFS_PARM parm = {
-						FM_FAT32,		// Format option (FM_FAT, FM_FAT32, FM_EXFAT and FM_SFD)
-						0, 				// Number of FATs
-						0, 				// Data area alignment (sector)
-						0, 				// Number of root directory entries
-						0				// Cluster size (byte)
-					};
-
-					BYTE work[FF_MAX_SS];
-					memset(work,0,sizeof(work));
-					auto rc = f_mkfs("0:", &parm, work, sizeof work);
-
-					if(rc != FR_OK) {
-						throw runtime_error(Logger::Message{"f_mkfs failed with error '{}', ({})", f_strerror(rc), rc});
-					}				
-
-				}
-
-				::close(fd);
 				return "FatFS test passed";
 			}
 		},

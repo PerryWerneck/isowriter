@@ -168,6 +168,14 @@
 
 	}
 
+	bool DataSource::for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const {
+
+		const auto url = const_cast<DataSource *>(this)->url();
+		debug("Getting files from ",url.c_str());
+
+
+		return false;	
+	}
 
  }
 

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2026 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -24,59 +24,84 @@
  #pragma once
  #include <udjat/defs.h>
  #include <udjat/tools/properties.h>
- #include <reinstall/image.h>
- #include <reinstall/disk/abstract.h>
- #include <memory>
+ #include <fatfs/ff.h>
+ #include <udjat/tools/url.h>
 
  namespace FatFS {
 
-	class UDJAT_API Image : public Reinstall::Abstract::Image {
+	class UDJAT_API Image {
+	private:
+		int fd = -1;
+		
 	public:
-
-		/// @brief ISO9660 image definitions.
 		struct Settings {
-			uint8_t type = 0;				///< @brief Image type (FAT/FAT32/EXFAT).
-			uint8_t n_fats = 0;				///< @brief Specifies number of FAT copies on the FAT/FAT32 volume.
-			uint32_t align = 0;				///< @brief Specifies alignment of the volume data area (file allocation pool, usually erase block boundary of flash memory media) in unit of sector.
-			uint32_t n_root = 0;			///< @brief Specifies number of root directory entries on the FAT volume.
-			uint32_t au_size = 0;			///< @brief Specifies size of the cluster (allocation unit) in unit of byte.
-			uint64_t imglen = 0LL;			///< @brief The image length.
-			const char *label = nullptr;    ///< @brief The image label.
-
-			Settings(const Udjat::Properties &node);
-
-			/// @brief Get fat length (in bytes).
-			size_t fat_length() const noexcept;
-
+			MKFS_PARM parms = { FM_FAT32, 0, 0, 0, 0};	///< Format parameter structure used for f_mkfs()
+			LBA_t plist[FF_VOLUMES] = { 100, 0, 0, 0 };
 		};
 
-		Image(Reinstall::Builder *builder, const std::shared_ptr<Settings> s);
-		virtual ~Image();
+		Image(const Settings &settings, int fd);
+		Image(const Settings &settings, const char *filename, unsigned long long length);
+		~Image();
 
-		void pre(Udjat::Abstract::Object &object);
-
-		void post(Udjat::Abstract::Object &object);
-
-		void write() override;
-
-		void append(std::shared_ptr<Reinstall::DataSource> source) override;
-
-		inline void append(std::list<std::shared_ptr<Reinstall::DataSource>> &sources) {
-			Reinstall::Abstract::Image::append(sources);
-		}
-
-	protected:
-		void append(const char *from, const char *to) override;
-
-	private:
-		std::shared_ptr<Settings> settings;
-
-		/// @brief The FAT disk image on temporary file.
-		class Disk;
-
-		std::shared_ptr<Disk> disk;
+		void push_back(const Udjat::URL &url, const char *path);
 
 	};
 
  }
+
+//  #include <reinstall/image.h>
+//  #include <reinstall/disk/abstract.h>
+//  #include <memory>
+
+//  namespace FatFS {
+
+// 	class UDJAT_API Image : public Reinstall::Abstract::Image {
+// 	public:
+
+// 		/// @brief ISO9660 image definitions.
+// 		struct Settings {
+// 			uint8_t type = 0;				///< @brief Image type (FAT/FAT32/EXFAT).
+// 			uint8_t n_fats = 0;				///< @brief Specifies number of FAT copies on the FAT/FAT32 volume.
+// 			uint32_t align = 0;				///< @brief Specifies alignment of the volume data area (file allocation pool, usually erase block boundary of flash memory media) in unit of sector.
+// 			uint32_t n_root = 0;			///< @brief Specifies number of root directory entries on the FAT volume.
+// 			uint32_t au_size = 0;			///< @brief Specifies size of the cluster (allocation unit) in unit of byte.
+// 			uint64_t imglen = 0LL;			///< @brief The image length.
+// 			const char *label = nullptr;    ///< @brief The image label.
+
+// 			Settings(const Udjat::Properties &node);
+
+// 			/// @brief Get fat length (in bytes).
+// 			size_t fat_length() const noexcept;
+
+// 		};
+
+// 		Image(Reinstall::Builder *builder, const std::shared_ptr<Settings> s);
+// 		virtual ~Image();
+
+// 		void pre(Udjat::Abstract::Object &object);
+
+// 		void post(Udjat::Abstract::Object &object);
+
+// 		void write() override;
+
+// 		void append(std::shared_ptr<Reinstall::DataSource> source) override;
+
+// 		inline void append(std::list<std::shared_ptr<Reinstall::DataSource>> &sources) {
+// 			Reinstall::Abstract::Image::append(sources);
+// 		}
+
+// 	protected:
+// 		void append(const char *from, const char *to) override;
+
+// 	private:
+// 		std::shared_ptr<Settings> settings;
+
+// 		/// @brief The FAT disk image on temporary file.
+// 		class Disk;
+
+// 		std::shared_ptr<Disk> disk;
+
+// 	};
+
+//  }
 

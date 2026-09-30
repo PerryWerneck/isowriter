@@ -143,6 +143,9 @@ conf_data.set('STATIC_MODULES',1)
 
 if fatfs.found()
 	conf_data.set('HAVE_FATFS', 1)
+	lib_src += [
+		'src/modules/isobuilder/fatfs/image.cc',
+	]
 endif
 
 if(zlib.found())
