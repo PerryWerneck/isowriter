@@ -56,6 +56,7 @@
 			[](std::ostream &stream) {
 
 				auto install = make_shared<Repository>("https://download.opensuse.org/tumbleweed/repo/oss/");
+				install->reset();
 
 				return "Repository test passed";
 			}

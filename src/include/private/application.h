@@ -27,11 +27,13 @@
  #include <memory>
  #include <vector>
  #include <udjat/tools/string.h>
+ #include <udjat/ui/progress.h>
 
  namespace Reinstall {
 
 	class Group;
 	class Action;
+	class Progress;
 
 	class UDJAT_PRIVATE Application : private Udjat::Properties::ObjectBuilder {
 	private:
@@ -60,11 +62,11 @@
 
 		/// @brief Run interactive mode.
 		/// @return return code (0 = ok)
-		virtual int run_interactive() = 0;
+		virtual int run_interactive();
 
 		/// @brief Run interactive mode.
 		/// @return return code (0 = ok)
-		virtual int run_non_interactive() = 0;
+		virtual int run_non_interactive();
 
 	public:
 
@@ -79,6 +81,13 @@
 		static Application & get_instance();
 
 		static void set_selected_path(const char *path);
+
+		/// @brief Build the image.
+		/// @param props The properties for the build.
+		/// @return true if the build was successful.
+		bool build(const Udjat::Properties &props) override;
+
+		virtual std::shared_ptr<Reinstall::Progress> ProgressDialogFactory();
 
 		/// @brief Set non-interactive mode, usually for scripts.
 		/// @param value If true set non-interactive mode, if false set interactive mode.

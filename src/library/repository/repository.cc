@@ -25,7 +25,19 @@
  #include <udjat/defs.h>
  #include <udjat/tools/url.h>
  #include <reinstall/tools/repository.h>
+ #include <reinstall/progress.h>
+ #include <udjat/tools/intl.h>
  #include <stdexcept>
+ #include <udjat/tools/logger.h>
+ #include <private/html_parser.hpp>
+
+ #ifdef HAVE_UNISTD_H
+ 	#include <unistd.h>
+ #endif // HAVE_UNISTD
+
+ #ifdef HAVE_ZLIB
+     #include <zlib.h>
+ #endif // HAVE_ZLIB
 
  using namespace Udjat;
  using namespace std;
@@ -72,6 +84,18 @@
 			source.remote.hostname(hostname.c_str());
 		}
 
+		if(!source.remote.empty()) {
+
+			// Get index file from remote URL
+
+
+		} else {
+
+			// Get index file from local URL
+			throw runtime_error("Local repository is not supported yet");
+
+		}
+
 	}
 
 	void Repository::url(const char *install) {
@@ -80,6 +104,141 @@
 
 	void Repository::host(const char *h) {
 		hostname = h;
+	}
+
+	void Repository::reset() {
+
+		debug("Loading repository index from ",source.remote.c_str());
+		
+		auto progress = Progress::Factory();
+		progress->title(_("Loading repository index"));
+		
+		// Clear the repository contents.
+		index.clear();
+
+		// TODO: If we have SLP support, try to get the repository URL from SLP.
+
+#ifdef HAVE_ZLIB
+
+		// Have zlib, try index.gz
+
+		try {
+
+			if(!source.remote.empty()) {
+
+				string filename;
+				bool tempfile = false;
+
+				URL url = source.remote;
+				url += "/index.gz";
+
+				if(source.local.empty()) {
+
+					// Have local repository, use it to cache the index file.
+					filename = source.local.path();
+					url.get(filename.c_str(),[&progress](uint64_t current, uint64_t total){
+						progress->set(current,total);
+						return false;
+					});
+
+				} else {
+
+					// Dont have local repository, use a temporary file to cache the index file.
+					tempfile = true;
+					filename = url.tempfile([&progress](uint64_t current, uint64_t total){
+						progress->set(current,total);
+						return false;
+					});
+
+				}
+
+				// Parse input file and load the repository index.
+				gzFile fd = gzopen(filename.c_str(), "r");
+				if(fd) {
+					char buffer[4096];
+					memset(buffer,0,4096);
+					while(gzgets(fd,buffer,4095)) {
+						for(size_t ix = 0; ix < 4096 && buffer[ix]; ix++) {
+							if(buffer[ix] < ' ') {
+								buffer[ix] = 0;
+							}
+						}
+						debug("Adding file ",buffer);
+						index.emplace_back(buffer);
+					}
+
+					gzclose(fd);
+				}
+
+				if(tempfile) {
+					// Remove temporary file after use.
+					unlink(filename.c_str());
+				}
+
+			} else {
+
+				throw runtime_error("Local repository is not supported yet");
+
+			}
+
+		} catch(const std::exception &e) {
+			
+			Logger::Message{_("Error loading repository index: {}"),e.what()}.warning("repository");
+
+		}
+#endif // HAVE_ZLIB
+
+		if(index.empty()) {
+
+			// No index file, try to parse the remote URL as HTML and get the files from it.
+			try {
+
+				if(!source.remote.empty()) {
+
+					URL url = source.remote;
+					url += "/";
+
+					String response = url.get();
+
+					if(response.empty()) {
+						throw runtime_error("Empty response from server");
+					}
+
+					HtmlParser parser;
+					shared_ptr<HtmlDocument> doc = parser.Parse(response.c_str(), response.size());
+					if(!doc) {
+						throw runtime_error("Error parsing HTML");
+					}
+
+					std::vector<shared_ptr<HtmlElement>> elements = doc->GetElementByTagName("a");
+					for(auto &element : elements) {
+
+						String href = element->GetAttribute("href");
+						if(href.empty() || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
+							continue;
+						}	
+
+						debug("Adding file ",String{href.c_str()}.c_str());
+						index.emplace_back(String{href.c_str()}.c_str());
+
+					}
+
+				} else {
+
+					throw runtime_error("Local repository is not supported yet");
+
+				}
+			} catch(...) {
+
+				progress->failed();
+				throw;
+
+			}
+
+		}
+	
+		progress->done();
+
 	}
 
 	// Udjat::URL Repository::url(bool rm) {

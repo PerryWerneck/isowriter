@@ -35,7 +35,6 @@
  #include <reinstall/action.h>
  #include <udjat/ui/progress.h>
  #include <udjat/ui/status.h>
- #include <udjat/ui/progress.h>
 
  class UDJAT_PRIVATE TopLevel : public Gtk::ApplicationWindow, protected Reinstall::Application, private Reinstall::Writer {
  private:

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2026 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -18,34 +18,25 @@
  */
 
  /**
-  * @brief Declares popup dialog.
+  * @brief Declares abstract dialog.
   */
 
-  /*
  #pragma once
+
  #include <udjat/defs.h>
- #include <reinstall/ui/dialog.h>
+ #include <udjat/ui/progress.h>
+ #include <memory>
 
  namespace Reinstall {
 
-	class UDJAT_API Dialog::Popup {
-	protected:
-		Popup();
-
+	class UDJAT_API Progress : public Udjat::Dialog::Progress {
 	public:
-		static std::shared_ptr<Popup> Factory();
+		Progress() : Udjat::Dialog::Progress() {
+		}
 
-		virtual int run(const std::function<int(Popup &popup)> &task) noexcept;
+		static std::shared_ptr<Progress> Factory();
 
-		/// @brief Sets the message that will be shown in the alert.
-		virtual Popup & message(const char *message);
-
-		/// @brief Sets the detail text that will be shown in the alert.
-		virtual Popup & detail(const char *text);
-
-		virtual ~Popup();
-
+		
 	};
-
+	
  }
-  */

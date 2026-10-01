@@ -133,10 +133,7 @@
 				'i', "interactive-testcases", "Run testsuite",
                 [](const char *arg, char) {
 
-#ifdef STATIC_MODULES
-				Logger::String{"Loading http module"}.info();
-				Udjat::HTTP::Module::Factory();
-#endif // STATIC_MODULES
+					Reinstall::Application application;
 
 					TestSuite testsuite;
 					udjat_register_tests(testsuite);
@@ -147,8 +144,6 @@
 					} else {
 						testsuite.interactive();
 					}
-
-					Udjat::Module::unload();
 
 					return Result::ExitNow;
 				}

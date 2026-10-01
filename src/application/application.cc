@@ -28,10 +28,13 @@
  #include <udjat/tools/configuration.h>
  #include <stdexcept>
  #include <vector>
+ #include <memory>
  #include <udjat/tools/string.h>
  #include <udjat/tools/intl.h>
  #include <reinstall/group.h>
  #include <udjat/module/http.h>
+ #include <udjat/ui/console/progress.h>
+ #include <reinstall/progress.h>
 
  using namespace Udjat;
  using namespace std;
@@ -188,5 +191,26 @@
 		return true;
 	}
 
+	int Application::run_interactive() {
+		throw std::logic_error("Interactive mode is not implemented");
+	}
+
+	int Application::run_non_interactive() {
+		throw std::logic_error("Non-interactive mode is not implemented");
+	}
+
+	std::shared_ptr<Progress> Application::ProgressDialogFactory() {
+		return make_shared<Progress>();
+	}
+
+	std::shared_ptr<Progress> Progress::Factory() {
+		return Application::get_instance().ProgressDialogFactory();
+	}
+
+	bool Application::build(const Udjat::Properties &props) {
+		throw std::logic_error("Build method is not implemented");
+	}
+
  }
+
  

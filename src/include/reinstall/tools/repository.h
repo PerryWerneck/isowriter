@@ -34,6 +34,7 @@
 	class UDJAT_API Repository {
 	private:
 		void sanitize(const Udjat::URL &url);
+		std::vector<std::string> index;
 
 	protected:
 		bool allow_cache;
@@ -60,8 +61,8 @@
 
 		/// @brief Load repository index.
 		/// @param itens Vector to receive the repository contents.
-		void load(std::vector<DataSource::Item> itens);
-
+		void reset();
+	
 		virtual ~Repository();
 
 	};
