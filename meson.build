@@ -71,9 +71,20 @@ add_project_arguments(global_cxxflags, language: 'cpp')
 #
 libslp = cxx.find_library('slp', required: false)
 gtkmm = dependency('gtkmm-4.0', required: false)
-libisofs =	dependency('libisofs-1',required: false)
 libarchive = dependency('libarchive', required: false)
 zlib= dependency('zlib', required: false)
+
+libisofs =	dependency(
+	'libisofs-1',
+	version : '>=1.5.8',
+	required: false
+)
+
+libisoburn = dependency(
+	'libburn-1',
+	version : '>=1.5.8',
+	required: false
+)
 
 fatfs = dependency(
   'libfatfs',
@@ -93,6 +104,7 @@ deps = [
 	libudjat,
 	gtkmm,
 	libisofs,
+	libisoburn,
 	libslp,
 	zlib,
 	fatfs,
@@ -157,6 +169,10 @@ if libisofs.found()
 	conf_data.set('HAVE_ISOFS', 1)
 	conf_data.set('HAVE_ISOHYBRID', 1)
 	conf_data.set('HAVE_ISOIMAGEDIR', 1)
+endif
+
+if libisoburn.found()
+	conf_data.set('HAVE_LIBISOBURN', 1)
 endif
 
 if libarchive.found()
