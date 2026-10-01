@@ -214,12 +214,21 @@
 					for(auto &element : elements) {
 
 						String href = element->GetAttribute("href");
-						if(href.empty() || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
+						if(href.empty() || href[0] == '#' || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
 							continue;
 						}	
 
-						debug("Adding file ",String{href.c_str()}.c_str());
-						index.emplace_back(String{href.c_str()}.c_str());
+						if(href[0] == '.' && href[1] == '.') {
+							continue;
+						}
+
+						const char *ptr = href.c_str();
+						if(*ptr == '.') {
+							ptr++;
+						}
+
+						debug("Adding file ",ptr);
+						index.emplace_back(ptr);
 
 					}
 

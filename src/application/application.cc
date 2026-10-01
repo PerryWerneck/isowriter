@@ -50,13 +50,6 @@
 			throw std::logic_error("Application instance already exists");
 		}
 		instance = this;
-	}
-
-	Application::~Application() {
-		instance = nullptr;
-	}
-
-	int Application::run() {
 
 #ifdef STATIC_MODULES
 		//
@@ -100,6 +93,15 @@
 
 		}		
 #endif // STATIC_MODULES
+
+	}
+
+	Application::~Application() {
+		instance = nullptr;
+		Module::unload();
+	}
+
+	int Application::run() {
 
 		//
 		// Load options
