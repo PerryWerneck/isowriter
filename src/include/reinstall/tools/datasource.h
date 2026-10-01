@@ -22,19 +22,35 @@
  #include <udjat/defs.h>
  #include <udjat/tools/properties.h>
  #include <udjat/tools/url.h>
+ #include <udjat/tools/string.h>
+ #include <memory>
+ #include <functional>
+ #include <string>
+ #include <vector>
 
  namespace Reinstall {
 
 	class Repository;
 
-	class UDJAT_API DataSource {
-	protected:
-		std::shared_ptr<Repository> repo;	///< @brief Repository for relative URLs.
-		Udjat::URL local;					///< @brief URL for local file.
-		Udjat::URL remote;					///< @brief URL for remote file.
-		bool allow_cache;
-
+	class UDJAT_API DataSource : public std::string {
 	public:
+
+		/// @brief DataSource item.
+		struct Item {
+			Udjat::URL local;				///< @brief URL for local file.
+			Udjat::URL remote;				///< @brief URL for remote file.
+			Udjat::String path;				///< @brief The path for source inside disk image. 
+
+			Item(const char *remote, const char *local);
+
+			Item(const char *url);
+
+			Item(const Udjat::Properties &props);
+			
+			/// @brief Sanitize URLs.
+			/// @param url The reference URL to update local/remote (depending on type).
+			void sanitize(const Udjat::URL &url);
+		};
 
 		/// @brief Build datasource.
 		/// @param repository The repository.
@@ -55,13 +71,21 @@
 		/// @brief Is this datasource a directory?
 		bool dir() const noexcept;
 
-		/// @brief Get URL for datasource file.
-		Udjat::URL url();
+		/// @brief Load URLs for datasource contents.
+		void load(std::vector<Item> &itens);
+
+		// /// @brief Get URL for datasource file.
+		// Udjat::URL url();
 
 		/// @brief Iterate from all source files.
 		/// @param task The tastk to be called on every file.
 		/// @return true if the enumaration was interrupted by task 'true' return.
-		bool for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const;
+		// bool for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const;
+
+	protected:
+		std::shared_ptr<Repository> repo;	///< @brief Repository for relative URLs.
+		bool allow_cache;
+		Item item;
 
 	};
 

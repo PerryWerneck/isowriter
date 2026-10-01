@@ -32,25 +32,16 @@
 
  namespace Reinstall {
 
+	std::string Repository::hostname;
+
 	/// @brief Build datasource.
 	/// @param remote URL for remote files.
 	/// @param local URL for local files.
-	Repository::Repository(const char *remote, const char *local) {
+	Repository::Repository(const char *remote, const char *local) : source{remote, local} {
 
-		if(remote && *remote) {
-			URL u{remote};
-			if(u.local()) {
-				this->local = u;
-			} else {
-				this->remote = u;
-			}
-		}
+		sanitize(source.remote);
 
-		if(local && *local) {
-			this->local = local;
-		}
-
-		if(this->local.empty() && this->remote.empty()) {
+		if(source.local.empty() && source.remote.empty()) {
 			throw runtime_error("At least one URL is required");
 		}
 
@@ -58,8 +49,13 @@
 
 	/// @brief Build URL using properties.
 	/// @param props The properties for URL.
-	Repository::Repository(const Udjat::Properties &props) {
+	Repository::Repository(const Udjat::Properties &props) : source{props} {
 
+		sanitize(URL{props["url"].c_str()});
+
+		if(source.local.empty() && source.remote.empty()) {
+			throw runtime_error("At least one URL is required");
+		}
 
 	}
 
@@ -67,23 +63,42 @@
 
 	}
 
-	Udjat::URL Repository::url(bool rm) {
+	void Repository::sanitize(const Udjat::URL &url) {
 
-		if(rm || local.empty()) {
+		source.sanitize(url);
 
-			// Get remote URL
-
-			if(!strcasecmp(remote.scheme().c_str(),"slp")) {
-				// Resolve SLP
-				throw runtime_error("SLP support is not implemented yet");
-			}
-
-			return remote;
+		if(!(hostname.empty() || source.remote.empty())) {
+			// Force hostname to pre-fixed one.
+			source.remote.hostname(hostname.c_str());
 		}
 
-		return local;
+	}
+
+	void Repository::url(const char *install) {
 
 	}
+
+	void Repository::host(const char *h) {
+		hostname = h;
+	}
+
+	// Udjat::URL Repository::url(bool rm) {
+
+	// 	if(rm || source.local.empty()) {
+
+	// 		// Get remote URL
+
+	// 		if(!strcasecmp(source.remote.scheme().c_str(),"slp")) {
+	// 			// Resolve SLP
+	// 			throw runtime_error("SLP support is not implemented yet");
+	// 		}
+
+	// 		return source.remote;
+	// 	}
+
+	// 	return source.local;
+
+	// }
 
  }
 

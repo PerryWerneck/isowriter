@@ -25,14 +25,20 @@
  #include <udjat/defs.h>
  #include <udjat/tools/url.h>
  #include <udjat/tools/properties.h>
+ #include <reinstall/tools/datasource.h>
+ #include <functional>
+ #include <vector>
 
  namespace Reinstall {
 
 	class UDJAT_API Repository {
+	private:
+		void sanitize(const Udjat::URL &url);
+
 	protected:
-		Udjat::URL local;		///< @brief URL for local file.
-		Udjat::URL remote;		///< @brief URL for remote file.
 		bool allow_cache;
+		DataSource::Item source;
+		static std::string hostname;	///< @brief The fixed hostname.
 
 	public:
 	
@@ -45,9 +51,18 @@
 		/// @param props The properties for URL.
 		Repository(const Udjat::Properties &props);
 
-		virtual ~Repository();
+		/// @brief Set URL for installation repository.
+		/// @param install The URL to set
+		static void url(const char *install);
 
-		Udjat::URL url(bool remote = true);
+		/// @brief Set hostname for all repositories.
+		static void host(const char *hostname);
+
+		/// @brief Load repository index.
+		/// @param itens Vector to receive the repository contents.
+		void load(std::vector<DataSource::Item> itens);
+
+		virtual ~Repository();
 
 	};
 

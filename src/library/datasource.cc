@@ -25,9 +25,11 @@
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/repository.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/intl.h>
  #include <udjat/tools/configuration.h>
  #include <cstdio>
  #include <stdexcept>
+ #include <memory>
 
  #define LOCAL_TMP "#(temp)#"
 
@@ -36,35 +38,17 @@
 
  namespace Reinstall {
 
-	DataSource::DataSource(std::shared_ptr<Repository> repository, const char *path) : repo{repository}, remote{path} {
+	DataSource::DataSource(std::shared_ptr<Repository> repository, const char *path) : repo{repository}, item{path} {
+		item.sanitize(item.remote);
 	}
 
-	DataSource::DataSource(const char *remote, const char *local) {
-		
+	DataSource::DataSource(const char *remote, const char *local) : item{remote,local} {
 		allow_cache = Config::Value<bool>{"url-handler","allow-cache",true}.get();
-
-		if(remote && *remote) {
-			URL u{remote};
-			if(u.local()) {
-				this->local = u;
-			} else {
-				this->remote = u;
-			}
-		}
-
-		if(local && *local) {
-			this->local = local;
-		}
-
-		if(this->local.empty() && this->remote.empty()) {
-			throw runtime_error("At least one URL is required");
-		}
-
 	}
 
 	/// @brief Build URL using properties.
 	/// @param props The properties for URL.
-	DataSource::DataSource(const Udjat::Properties &props) {
+	DataSource::DataSource(const Udjat::Properties &props) : item{props} {
 
 		if(props.contains("allow-cache")) {
 			allow_cache = props.get("allow-cache",true);
@@ -72,110 +56,208 @@
 			allow_cache = Config::Value<bool>{"url-handler","allow-cache",true}.get();
 		}
 		
-		// TODO: Get local & remote.
+		if( (item.remote.c_str()[0] == '/' || item.local.c_str()[0] == '/' || item.remote.c_str()[0] == '.' || item.local.c_str()[0] == '.') && !repo) {
+			throw runtime_error(_("A repository is required to use relative URLs"));
+		}
+
+	}
+
+	DataSource::Item::Item(const char *url) {
+
+		if(url[0] == '/' || url[0] == '.' ) {
+			path = url;
+		}
+
+		sanitize(URL{url});
+
+	}
+
+	DataSource::Item::Item(const char *r, const char *l) : remote{r} {
+		if(l) {
+			local = l;
+		}
+		sanitize(remote);
+	}
+
+	DataSource::Item::Item(const Udjat::Properties &props) {
+
+		// Search for image path.
+		{
+			// Detect path from url.
+			static const char *attrs[] = {
+				"image-path",
+				"url",
+				"local",
+				"remote"
+			};
+
+			for(const char *attr : attrs) {
+				auto str = props[attr];
+				if(str.c_str()[0] == '/' || str.c_str()[0] == '.' ) {
+					path = str;
+					break;
+				}
+				Logger::Message{"Ignoring invalid image path '{}' from attribute '{}'",str.c_str(),attr}.trace();
+			}
+
+			if(path.empty()) {
+				throw runtime_error(_("Unable to identify the path for source"));
+			}
+
+		}
+
+		// Get URLs.
+		local = props["local"].c_str();
+		remote = props["remote"].c_str();
+
+		sanitize(URL{props["url"].c_str()});
 
 	}
 
 	DataSource::~DataSource() {
-		if(!strcmp(local.hostname().c_str(),LOCAL_TMP)) {
-			debug("Removing temporary file '",local.c_str(),"'");
-			if(remove(local.path().c_str())) {
-				Logger::String{"Error cleaning '",local.c_str(),"': ",strerror(errno)}.warning();
+		if(!strcmp(item.local.hostname().c_str(),LOCAL_TMP)) {
+			debug("Removing temporary file '",item.local.c_str(),"'");
+			if(remove(item.local.path().c_str())) {
+				Logger::String{"Error cleaning '",item.local.c_str(),"': ",strerror(errno)}.warning();
 			}
 		}
+	}
+
+	void DataSource::Item::sanitize(const URL &url) {
+
+		if(local.empty() && (url.local() || url.c_str()[0] == '.' || url.c_str()[0] == '/')) {
+			local = url.c_str();
+		}
+
+		if(remote.empty() && (!url.local() || url.c_str()[0] == '.' || url.c_str()[0] == '/')) {
+			remote = url.c_str();
+		}
+
+		if(path.empty()) {
+			if(!local.empty()) {
+				path = local.path();
+			} else if(!remote.empty()) {
+				path = remote.path();
+			}	
+		}
+
+		if(path[0] != '/' && path[0] != '.') {
+			throw runtime_error(Logger::Message{_("Invalid image path: {}"),path.c_str()}.c_str());
+		}
+
+		if(local.empty() && remote.empty()) {
+			throw runtime_error(_("At least one URL is required"));
+		}
+
 	}
 
 	bool DataSource::dir() const noexcept {
 
 		String path;
 
-		if(!remote.empty())  {
-			path = remote.path();
+		if(!item.remote.empty())  {
+			path = item.remote.path();
 		} else {
-			path = local.path();
+			path = item.local.path();
 		}
 
 		return path[path.size()-1] == '/';
 
 	}
 
-	Udjat::URL DataSource::url() {
+	void DataSource::load(std::vector<Item> &itens) {
 
-		if(dir()) {
-			throw logic_error("Invalid usage for directory based datasource");
-		}
+	}
 
-		if(remote.empty()) {
-			URL u = local.c_str();
-			if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
-				u = repo->url(false).c_str();
-				u += remote.c_str();
-			}
-			return u;
-		}
+	// Udjat::URL DataSource::url() {
 
-		URL u = remote.c_str();
-		if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
-			u = repo->url().c_str();
-			u += remote.c_str();
-		}
+	// 	if(dir()) {
+	// 		throw logic_error("Invalid usage for directory based datasource");
+	// 	}
 
-		if(allow_cache) {
+	// 	if(remote.empty()) {
+	// 		URL u = local.c_str();
+	// 		if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
+	// 			u = repo->url(false).c_str();
+	// 			u += remote.c_str();
+	// 		}
+	// 		return u;
+	// 	}
 
-			if(!strcmp(local.hostname().c_str(),LOCAL_TMP)) {
-				// Already cached, just return it.
-				return local;
-			}
+	// 	URL u = remote.c_str();
+	// 	if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
+	// 		u = repo->url().c_str();
+	// 		u += remote.c_str();
+	// 	}
 
-			// TODO: Initialize progress bar.
+	// 	if(allow_cache) {
+
+	// 		if(!strcmp(local.hostname().c_str(),LOCAL_TMP)) {
+	// 			// Already cached, just return it.
+	// 			return local;
+	// 		}
+
+	// 		// TODO: Initialize progress bar.
 			
-			debug("Downloading ",u.c_str());
+	// 		debug("Downloading ",u.c_str());
 
-			// Check if local is relative.
-			URL u = local.c_str();
-			if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
-				u = repo->url(false).c_str();
-				u += local.c_str();
-			}
+	// 		// Check if local is relative.
+	// 		URL u = local.c_str();
+	// 		if(u.c_str()[0] == '/' || u.c_str()[0] == '.') {
+	// 			u = repo->url(false).c_str();
+	// 			u += local.c_str();
+	// 		}
 
-			if(u.empty() || !u.local()) {
+	// 		if(u.empty() || !u.local()) {
 
-				// No local, create temporary path.
-				auto filename = remote.tempfile([](uint64_t current, uint64_t total){
-					// TODO: Update progress bar.
-					return false;
-				});
+	// 			// No local, create temporary path.
+	// 			auto filename = remote.tempfile([](uint64_t current, uint64_t total){
+	// 				// TODO: Update progress bar.
+	// 				return false;
+	// 			});
 
-				local = String{"file://" LOCAL_TMP "/",filename.c_str()}.c_str();
+	// 			local = String{"file://" LOCAL_TMP "/",filename.c_str()}.c_str();
 
-			} else {
+	// 		} else {
 
-				// Has local, check if it's updated.
+	// 			// Has local, check if it's updated.
 
-				remote.get(u.path().c_str(),[](uint64_t current, uint64_t total){
-					// TODO: Update progress bar.
-					return false;
-				});
+	// 			remote.get(u.path().c_str(),[](uint64_t current, uint64_t total){
+	// 				// TODO: Update progress bar.
+	// 				return false;
+	// 			});
 
-				local = u.c_str();
+	// 			local = u.c_str();
 			
-			}
+	// 		}
 
-			return local;
-		}
+	// 		return local;
+	// 	}
 		
-		return remote;
+	// 	return remote;
 
-	}
+	// }
 
-	bool DataSource::for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const {
+	// bool DataSource::for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const {
 
-		const auto url = const_cast<DataSource *>(this)->url();
-		debug("Getting files from ",url.c_str());
+	// 	if(repo) {
+
+	// 		// Has repository, use it.
+	// 		URL url = remote.c_str();
+	// 		if(url.empty()) {
+	// 			url = local.c_str();
+	// 		}
+
+	// 		repo->for_each(url,imgpath.c_str(),task);
 
 
-		return false;	
-	}
+	// 		return false;
+	// 	}
+
+	// 	throw runtime_error("No repository enumeration is not available");
+
+	// 	return false;	
+	// }
 
  }
 

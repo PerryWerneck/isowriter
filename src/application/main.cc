@@ -41,6 +41,8 @@
  #include <udjat/module/http.h>
 #endif // DEBUG
 
+ #include <reinstall/tools/repository.h>
+
 #ifdef HAVE_GTKMM
  static bool has_graphical_session();
 #endif
@@ -192,20 +194,26 @@
 			Argument{
 				'I', "install", _("Set URL for installation repository"), "url",
                 [](const char *arg, char) {
+					Repository::url(arg);
+					return Result::Handled;
+				}
+			},
+			Argument{
+				'S', "server", _("Set hostname/ip for all repositories"), "url",
+                [](const char *arg, char) {
+					Repository::host(arg);
 					return Result::Handled;
 				}
 			},
 			Argument{
 				'T', "target", _("Set installation repository from target-name"), "target",
                 [](const char *arg, char) {
-					Reinstall::Application::set_selected_path(arg);
 					return Result::Handled;
 				}
 			},
 			Argument{
 				'X', "no-slp", _("Disable SLP search"),
                 [](const char *arg, char) {
-					Reinstall::Application::set_selected_path(arg);
 					return Result::Handled;
 				}
 			}
@@ -259,8 +267,7 @@
  bool has_graphical_session() {
     const char* session = std::getenv("XDG_SESSION_TYPE");
     if (session) {
-        if (std::strcmp(session, "wayland") == 0 ||
-            std::strcmp(session, "x11") == 0)
+        if (std::strcmp(session, "wayland") == 0 || std::strcmp(session, "x11") == 0)
             return true;
         if (std::strcmp(session, "tty") == 0)
             return false;

@@ -51,6 +51,15 @@
 
 	suite.add(
 		PACKAGE_NAME " Tests",
+		 TestSuite::Case{
+			"repository", "Test repository",
+			[](std::ostream &stream) {
+
+				auto install = make_shared<Repository>("https://download.opensuse.org/tumbleweed/repo/oss/");
+
+				return "Repository test passed";
+			}
+		},
 #if defined(HAVE_FATFS)
 		 TestSuite::Case{
 			"fatfs", "Test FatFS",
