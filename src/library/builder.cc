@@ -24,6 +24,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <reinstall/tools/builder.h>
+ #include <reinstall/tools/datasource.h>
  #include <udjat/tools/properties.h>
  #include <memory>
 
@@ -67,16 +68,20 @@
 		return true;
 	}
 
-	bool Builder::for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const {
-
-		// for(auto source : sources) {
-		// 	if(source->for_each(task)) {
-		// 		return true;
-		// 	}
-		// }
-
-		return false;
+	void Builder::load(std::vector<DataSource::Item> &itens) {
+		for(auto source : sources) {
+			source->load(itens);
+		}
 	}
+
+	// bool Builder::for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const {
+	// 	for(auto source : sources) {
+	// 		if(source->for_each(task)) {
+	// 			return true;
+	// 		}
+	// 	}
+	// 	return false;
+	// }
 
  }
 

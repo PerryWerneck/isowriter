@@ -55,12 +55,12 @@
 		/// @brief Build datasource.
 		/// @param repository The repository.
 		/// @param path Relative path for files inside repository.
-		DataSource(std::shared_ptr<Repository> repository, const char *path);
+		DataSource(const char *name, std::shared_ptr<Repository> repository, const char *path);
 	
 		/// @brief Build datasource.
 		/// @param remote URL for remote files.
 		/// @param local URL for local files.
-		DataSource(const char *remote = nullptr, const char *local = nullptr);
+		DataSource(const char *name, const char *remote, const char *local = nullptr);
 
 		/// @brief Build URL using properties.
 		/// @param props The properties for URL.

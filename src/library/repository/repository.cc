@@ -30,6 +30,7 @@
  #include <stdexcept>
  #include <udjat/tools/logger.h>
  #include <private/html_parser.hpp>
+ #include <udjat/tools/file/path.h>
 
  #ifdef HAVE_UNISTD_H
  	#include <unistd.h>
@@ -49,7 +50,7 @@
 	/// @brief Build datasource.
 	/// @param remote URL for remote files.
 	/// @param local URL for local files.
-	Repository::Repository(const char *remote, const char *local) : source{remote, local} {
+	Repository::Repository(const char *name, const char *remote, const char *local) : std::string{name}, source{remote, local} {
 
 		sanitize(source.remote);
 
@@ -61,7 +62,7 @@
 
 	/// @brief Build URL using properties.
 	/// @param props The properties for URL.
-	Repository::Repository(const Udjat::Properties &props) : source{props} {
+	Repository::Repository(const Udjat::Properties &props) : std::string{props["name"].c_str()}, source{props} {
 
 		sanitize(URL{props["url"].c_str()});
 
@@ -78,22 +79,9 @@
 	void Repository::sanitize(const Udjat::URL &url) {
 
 		source.sanitize(url);
-
 		if(!(hostname.empty() || source.remote.empty())) {
 			// Force hostname to pre-fixed one.
 			source.remote.hostname(hostname.c_str());
-		}
-
-		if(!source.remote.empty()) {
-
-			// Get index file from remote URL
-
-
-		} else {
-
-			// Get index file from local URL
-			throw runtime_error("Local repository is not supported yet");
-
 		}
 
 	}
@@ -110,143 +98,14 @@
 
 		debug("Loading repository index from ",source.remote.c_str());
 		
-		auto progress = Progress::Factory();
-		progress->title(_("Loading repository index"));
-		
 		// Clear the repository contents.
-		index.clear();
+		files.clear();
 
 		// TODO: If we have SLP support, try to get the repository URL from SLP.
 
-#ifdef HAVE_ZLIB
 
-		// Have zlib, try index.gz
-
-		try {
-
-			if(!source.remote.empty()) {
-
-				string filename;
-				bool tempfile = false;
-
-				URL url = source.remote;
-				url += "/index.gz";
-
-				if(source.local.empty()) {
-
-					// Have local repository, use it to cache the index file.
-					filename = source.local.path();
-					url.get(filename.c_str(),[&progress](uint64_t current, uint64_t total){
-						progress->set(current,total);
-						return false;
-					});
-
-				} else {
-
-					// Dont have local repository, use a temporary file to cache the index file.
-					tempfile = true;
-					filename = url.tempfile([&progress](uint64_t current, uint64_t total){
-						progress->set(current,total);
-						return false;
-					});
-
-				}
-
-				// Parse input file and load the repository index.
-				gzFile fd = gzopen(filename.c_str(), "r");
-				if(fd) {
-					char buffer[4096];
-					memset(buffer,0,4096);
-					while(gzgets(fd,buffer,4095)) {
-						for(size_t ix = 0; ix < 4096 && buffer[ix]; ix++) {
-							if(buffer[ix] < ' ') {
-								buffer[ix] = 0;
-							}
-						}
-						debug("Adding file ",buffer);
-						index.emplace_back(buffer);
-					}
-
-					gzclose(fd);
-				}
-
-				if(tempfile) {
-					// Remove temporary file after use.
-					unlink(filename.c_str());
-				}
-
-			} else {
-
-				throw runtime_error("Local repository is not supported yet");
-
-			}
-
-		} catch(const std::exception &e) {
-			
-			Logger::Message{_("Error loading repository index: {}"),e.what()}.warning("repository");
-
-		}
-#endif // HAVE_ZLIB
-
-		if(index.empty()) {
-
-			// No index file, try to parse the remote URL as HTML and get the files from it.
-			try {
-
-				if(!source.remote.empty()) {
-
-					URL url = source.remote;
-					url += "/";
-
-					String response = url.get();
-
-					if(response.empty()) {
-						throw runtime_error("Empty response from server");
-					}
-
-					HtmlParser parser;
-					shared_ptr<HtmlDocument> doc = parser.Parse(response.c_str(), response.size());
-					if(!doc) {
-						throw runtime_error("Error parsing HTML");
-					}
-
-					std::vector<shared_ptr<HtmlElement>> elements = doc->GetElementByTagName("a");
-					for(auto &element : elements) {
-
-						String href = element->GetAttribute("href");
-						if(href.empty() || href[0] == '#' || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
-							continue;
-						}	
-
-						if(href[0] == '.' && href[1] == '.') {
-							continue;
-						}
-
-						const char *ptr = href.c_str();
-						if(*ptr == '.') {
-							ptr++;
-						}
-
-						debug("Adding file ",ptr);
-						index.emplace_back(ptr);
-
-					}
-
-				} else {
-
-					throw runtime_error("Local repository is not supported yet");
-
-				}
-			} catch(...) {
-
-				progress->failed();
-				throw;
-
-			}
-
-		}
-	
-		progress->done();
+		// Load index file from repository.
+		index();
 
 	}
 
@@ -268,7 +127,6 @@
 
 	// }
 
- }
 
 //  #include <config.h>
 //  #include <udjat/defs.h>
@@ -367,149 +225,160 @@
 // 		return true;
 // 	}
 
-// 	static void parse_index_html(const char *name, const char *root, const URL &url, std::vector<std::string> &files) {
+	static void parse_index_html(const char *name, const char *root, const URL &url, std::vector<String> &files) {
 
-// 		Logger::String{"Loading ",url.c_str()}.trace(name);
-// 		Dialog::Progress::getInstance()->set(url.c_str());
+		Logger::String{"Loading ",url.c_str()}.trace(name);
 
-// 		String response = url.get();
+		auto progress = Progress::Factory();
+		progress->set(url.c_str());
+		String response = url.get([progress](uint64_t current, uint64_t total){
+			progress->set(current,total);
+			return false;
+		});
 
-// 		if(response.empty()) {
-// 			throw runtime_error("Empty response from server");
-// 		}
+		if(response.empty()) {
+			throw runtime_error("Empty response from server");
+		}
 
-// 		HtmlParser parser;
-// 		shared_ptr<HtmlDocument> doc = parser.Parse(response.c_str(), response.size());
-// 		if(!doc) {
-// 			throw runtime_error("Error parsing HTML");
-// 		}
+		HtmlParser parser;
+		shared_ptr<HtmlDocument> doc = parser.Parse(response.c_str(), response.size());
+		if(!doc) {
+			throw runtime_error("Error parsing HTML");
+		}
 
-// 		std::vector<shared_ptr<HtmlElement>> elements = doc->GetElementByTagName("a");
-// 		for(auto &element : elements) {
+		std::vector<shared_ptr<HtmlElement>> elements = doc->GetElementByTagName("a");
+		for(auto &element : elements) {
 
-// 			String href = element->GetAttribute("href");
-// 			if(href.empty() || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
-// 				continue;
-// 			}	
+			String href = element->GetAttribute("href");
+			if(href.empty() || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
+				continue;
+			}	
 
-// 			if(href[href.size()-1] == '/') {
-// 				parse_index_html(
-// 					name,
-// 					String{root,href.c_str()}.c_str(),
-// 					URL{url.c_str(),href.c_str()},
-// 					files
-// 				);
-// 			} else {
+			if(href[href.size()-1] == '/') {
+				parse_index_html(
+					name,
+					String{root,href.c_str()}.c_str(),
+					URL{url.c_str(),href.c_str()},
+					files
+				);
+			} else {
 
-// 				debug("Adding file ",String{root,href.c_str()}.c_str());
-// 				files.emplace_back(String{root,href.c_str()}.c_str());
+				debug("Adding file ",String{root,href.c_str()}.c_str());
+				files.emplace_back(String{root,href.c_str()}.c_str());
 
-// 			}
+			}
 
-// 		}
+		}
 
-// 	}
+	}
 
-// 	bool Repository::index(const char *filename) {
-// #ifdef HAVE_ZLIB
-// 		gzFile fd = gzopen(filename, "r");
-// 		if(!fd) {
-// 			throw runtime_error("Error opening INDEX.gz");
-// 		}
+	bool Repository::index(const char *filename) {
+#ifdef HAVE_ZLIB
+		gzFile fd = gzopen(filename, "r");
+		if(!fd) {
+			throw runtime_error("Error opening INDEX.gz");
+		}
 
-// 		char buffer[4096];
-// 		memset(buffer,0,4096);
-// 		while(gzgets(fd,buffer,4095)) {
-// 			for(size_t ix = 0; ix < 4096 && buffer[ix]; ix++) {
-// 				if(buffer[ix] < ' ') {
-// 					buffer[ix] = 0;
-// 				}
-// 			}
-// //			debug("Adding file ",buffer);
-// 			files.emplace_back(buffer);
-// 		}
+		char buffer[4096];
+		memset(buffer,0,4096);
+		while(gzgets(fd,buffer,4095)) {
+			for(size_t ix = 0; ix < 4096 && buffer[ix]; ix++) {
+				if(buffer[ix] < ' ') {
+					buffer[ix] = 0;
+				}
+			}
 
-// 		gzclose(fd);
+			const char *ptr = buffer;
+			if(*ptr == '.') {
+				ptr++;
+			}
+			if(*ptr != '/') {
+				throw runtime_error(Logger::String{"Invalid filename in INDEX.gz: '",buffer,"'"});
+			}
 
-// 		Logger::String{"Got ",files.size()," filenames from repository index."}.trace(name());
+//			debug("Adding file ",ptr);
+			files.emplace_back(ptr);
+		}
 
-// 		return true;
-// #else
-// 		return false;
-// #endif // HAVE_ZLIB
-// 	}
+		gzclose(fd);
 
-// 	bool Repository::index() {
+		Logger::String{"Got ",files.size()," filenames from repository index."}.trace(c_str());
 
-// 		if(!files.empty()) {
-// 			return true;
-// 		}
+		return true;
+#else
+		return false;
+#endif // HAVE_ZLIB
+	}
 
-// #ifdef HAVE_ZLIB
-// 		{
-// 			debug("Trying index.gz");
+	bool Repository::index() {
 
-// 			// Try INDEX.gz
+		if(!files.empty()) {
+			return true;
+		}
 
-// 			URL url = url_remote();
-// 			url += "INDEX.gz";
+#ifdef HAVE_ZLIB
+		if(try_index_gz) {
 
-// 			Logger::String{"Searching for ",url.c_str()}.trace(name());
+			debug("Trying index.gz");
 
-// 			try {
+			// Try INDEX.gz
 
-// 				string filename;
+			URL url = source.remote;
+			url += "INDEX.gz";
 
-// 				if(has_local()) {
+			Logger::String{"Searching for ",url.c_str()}.trace(c_str());
 
-// 					// Has local path, update file.
-// 					debug("Using local file");
+			try {
 
-// 					filename = url_local().path();
-// 					File::Path::mkdir(filename.c_str());
-// 					filename += "INDEX.gz";
+				auto progress = Progress::Factory();
+				progress->url(_("Loading repository index"));
+				string filename;
 
-// 					auto progress = Dialog::Progress::getInstance();
-// 					progress->url(_("Loading repository index"));
-// 					url.get(filename.c_str(),[&progress](uint64_t current, uint64_t total){
-// 						progress->set(current,total);
-// 						return false;
-// 					});
-// 					progress->done();
-// 					return index(filename.c_str());
+				if(!source.local.empty()) {
 
-// 				} else {
+					// Has local path, update file.
+					debug("Using local file");
 
-// 					// No local path, use cache.
-// 					debug("Using remote file");
+					filename = source.local.path().c_str();
+					File::Path::mkdir(filename.c_str());
+					filename += "INDEX.gz";
 
-// 					auto progress = Dialog::Progress::getInstance();
-// 					progress->url(_("Loading repository index"));
-// 					filename = url.tempfile([&progress](uint64_t current, uint64_t total){
-// 						progress->set(current,total);
-// 						return false;
-// 					});
-// 					progress->done();
-// 					bool rc = index(filename.c_str());
-// 					unlink(filename.c_str());
-// 					return rc;
-// 				}
+					url.get(filename.c_str(),[&progress](uint64_t current, uint64_t total){
+						progress->set(current,total);
+						return false;
+					});
+					progress->done();
+					return index(filename.c_str());
 
-// 			} catch(const std::exception &e) {
+				} else {
 
-// 				Logger::String{url.c_str(),": ",e.what()}.error(name());
+					// No local path, use cache.
+					debug("Using remote file");
+					filename = url.tempfile([&progress](uint64_t current, uint64_t total){
+						progress->set(current,total);
+						return false;
+					});
+					progress->done();
+					bool rc = index(filename.c_str());
+					unlink(filename.c_str());
+					return rc;
+				}
 
-// 			}
+			} catch(const std::exception &e) {
+
+				Logger::String{url.c_str(),": ",e.what()}.error(c_str());
+
+			}
 
 
-// 		}
-// #endif // HAVE_ZLIB
+		}
+#endif // HAVE_ZLIB
 
-// 		// Parse index.html
-// 		parse_index_html(name(),"./",URL{url_remote().c_str(),"/"},files);
+		// Parse index.html
+		parse_index_html(c_str(),"./",URL{source.remote.c_str(),"/"},files);
 
-// 		return true;
-// 	}
+		return true;
+	}
 
 
 // 	const char * Repository::remote() const {
@@ -572,4 +441,5 @@
 
 //  }
 
+ }
 

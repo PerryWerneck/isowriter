@@ -17,8 +17,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #define LOG_DOMAIN "datasource"
-
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/url.h>
@@ -38,17 +36,17 @@
 
  namespace Reinstall {
 
-	DataSource::DataSource(std::shared_ptr<Repository> repository, const char *path) : repo{repository}, item{path} {
+	DataSource::DataSource(const char *name, std::shared_ptr<Repository> repository, const char *path) : std::string{name}, repo{repository}, item{path} {
 		item.sanitize(item.remote);
 	}
 
-	DataSource::DataSource(const char *remote, const char *local) : item{remote,local} {
+	DataSource::DataSource(const char *name, const char *remote, const char *local) : std::string{name}, item{remote,local} {
 		allow_cache = Config::Value<bool>{"url-handler","allow-cache",true}.get();
 	}
 
 	/// @brief Build URL using properties.
 	/// @param props The properties for URL.
-	DataSource::DataSource(const Udjat::Properties &props) : item{props} {
+	DataSource::DataSource(const Udjat::Properties &props) : std::string{props["name"].c_str()},item{props} {
 
 		if(props.contains("allow-cache")) {
 			allow_cache = props.get("allow-cache",true);
@@ -97,7 +95,7 @@
 					path = str;
 					break;
 				}
-				Logger::Message{"Ignoring invalid image path '{}' from attribute '{}'",str.c_str(),attr}.trace();
+				Logger::Message{"Ignoring invalid image path '{}' from attribute '{}'",str.c_str(),attr}.trace(props["name"].c_str());
 			}
 
 			if(path.empty()) {
@@ -118,7 +116,7 @@
 		if(!strcmp(item.local.hostname().c_str(),LOCAL_TMP)) {
 			debug("Removing temporary file '",item.local.c_str(),"'");
 			if(remove(item.local.path().c_str())) {
-				Logger::String{"Error cleaning '",item.local.c_str(),"': ",strerror(errno)}.warning();
+				Logger::String{"Error cleaning '",item.local.c_str(),"': ",strerror(errno)}.warning(c_str());
 			}
 		}
 	}
@@ -165,7 +163,25 @@
 
 	}
 
-	void DataSource::load(std::vector<Item> &itens) {
+	void DataSource::load(std::vector<DataSource::Item> &itens) {
+ 
+		// bool rc = false;
+
+		// auto url = item.remote;
+		// if(url.empty()) {
+		// 	url = item.local.c_str();
+		// }
+
+		// if(repo && url.has_suffix("/")) {
+
+		// 	debug("Loading ",url.c_str()," from repository '",repo->c_str(),"'");
+		// 	repo->load(url.path().c_str(),itens);
+
+		// } else {
+
+		// 	throw runtime_error("Non repository based datasource is not implemented yet");
+
+		// }
 
 	}
 

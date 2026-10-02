@@ -42,6 +42,7 @@
  #include <reinstall/tools/builder.h>
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/repository.h>
+ #include <reinstall/progress.h>
 
  using namespace Udjat;
  using namespace Reinstall;
@@ -55,7 +56,7 @@
 			"repository", "Test repository",
 			[](std::ostream &stream) {
 
-				auto install = make_shared<Repository>("https://download.opensuse.org/tumbleweed/repo/oss/");
+				auto install = make_shared<Repository>("install","https://download.opensuse.org/tumbleweed/repo/oss/");
 				install->reset();
 
 				return "Repository test passed";
@@ -63,23 +64,26 @@
 		},
 #if defined(HAVE_FATFS)
 		 TestSuite::Case{
-			"fatfs", "Test FatFS",
+			"fatbuilder", "Test FatBuilder",
 			[](std::ostream &stream) {
 
-				auto install = make_shared<Repository>("https://download.opensuse.org/tumbleweed/repo/oss/");
+				auto install = make_shared<Repository>("install","https://download.opensuse.org/tumbleweed/repo/oss/");
 				Builder builder{"test"};
 
 				builder.push_back(make_shared<DataSource>(
+					"boot",
 					install,
 					"/boot/"
 				));
 
 				builder.push_back(make_shared<DataSource>(
+					"EFI",
 					install,
 					"/EFI/"
 				));
 
 				builder.push_back(make_shared<DataSource>(
+					"x86_64",
 					install,
 					"/x86_64/"
 				));
@@ -91,6 +95,19 @@
 
 				FatFS::Image::Settings settings;
 				FatFS::Image disk{settings,"/tmp/test.iso",IMAGE_SIZE};
+
+				std::vector<DataSource::Item> itens;
+				builder.load(itens);
+
+				// auto progress = Progress::Factory();
+				// progress->title("Getting files from repository");
+				// builder.for_each([progress](const Udjat::URL &from, const char *to){
+				// 	progress->url(from.c_str());
+
+
+				// 	return false;	// Continue enumeration
+				// });
+
 
 
 				return "FatFS test passed";

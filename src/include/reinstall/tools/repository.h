@@ -31,13 +31,17 @@
 
  namespace Reinstall {
 
-	class UDJAT_API Repository {
+	class UDJAT_API Repository : public std::string {
 	private:
 		void sanitize(const Udjat::URL &url);
-		std::vector<std::string> index;
+		std::vector<Udjat::String> files;
+
+		bool index(const char *filename);
+		bool index();
 
 	protected:
 		bool allow_cache;
+		bool try_index_gz = true;
 		DataSource::Item source;
 		static std::string hostname;	///< @brief The fixed hostname.
 
@@ -46,7 +50,7 @@
 		/// @brief Build datasource.
 		/// @param remote URL for remote files.
 		/// @param local URL for local files.
-		Repository(const char *remote = nullptr, const char *local = nullptr);
+		Repository(const char *name, const char *remote, const char *local = nullptr);
 
 		/// @brief Build URL using properties.
 		/// @param props The properties for URL.
