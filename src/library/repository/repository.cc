@@ -97,6 +97,35 @@
 		hostname = h;
 	}
 
+	void Repository::load(const char *path, std::vector<DataSource::Item> &itens) {
+
+		// Implementation for loading items from the repository
+
+		if(files.empty()) {
+			reset();
+		}
+
+		debug("Loading repository index for path ",path);
+		for(const auto &file : files) {
+
+			if(file.has_prefix(path)) {
+				debug("Adding file ",file.c_str());
+				DataSource::Item item{source.remote.c_str(), source.local.c_str()};
+				if(!item.remote.empty()) {
+					item.remote += file.c_str();
+				}
+				if(!item.local.empty()) {
+					item.local += file.c_str();
+				}
+				item.path = file;
+				itens.push_back(item);
+
+			}
+
+		}
+
+	}
+
 
 	// Udjat::URL Repository::url(bool rm) {
 
@@ -262,6 +291,7 @@
 	}
 
 	bool Repository::index(const char *filename) {
+
 #ifdef HAVE_ZLIB
 		gzFile fd = gzopen(filename, "r");
 		if(!fd) {
@@ -370,6 +400,8 @@
 
 		}
 #endif // HAVE_ZLIB
+
+		// TODO: Parse jsontable, example: https://download.opensuse.org/download/tumbleweed/repo/oss/boot/x86_64/?jsontable
 
 		// Parse index.html
 		parse_index_html(c_str(),"./",URL{source.remote.c_str(),"/"},files);

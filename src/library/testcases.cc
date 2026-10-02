@@ -71,21 +71,15 @@
 				Builder builder{"test"};
 
 				builder.push_back(make_shared<DataSource>(
-					"boot",
-					install,
-					"/boot/"
-				));
-
-				builder.push_back(make_shared<DataSource>(
 					"EFI",
 					install,
 					"/EFI/"
 				));
 
 				builder.push_back(make_shared<DataSource>(
-					"x86_64",
+					"boot",
 					install,
-					"/x86_64/"
+					"/boot/"
 				));
 
 				// Create file
@@ -98,15 +92,6 @@
 
 				std::vector<DataSource::Item> itens;
 				builder.load(itens);
-
-				// auto progress = Progress::Factory();
-				// progress->title("Getting files from repository");
-				// builder.for_each([progress](const Udjat::URL &from, const char *to){
-				// 	progress->url(from.c_str());
-
-
-				// 	return false;	// Continue enumeration
-				// });
 
 
 

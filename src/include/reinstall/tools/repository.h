@@ -55,6 +55,8 @@
 		/// @param props The properties for URL.
 		Repository(const Udjat::Properties &props);
 
+		virtual ~Repository();
+
 		/// @brief Set URL for installation repository.
 		/// @param install The URL to set
 		static void url(const char *install);
@@ -66,7 +68,7 @@
 		/// @param itens Vector to receive the repository contents.
 		void reset();
 	
-		virtual ~Repository();
+		void load(const char *path, std::vector<DataSource::Item> &itens);
 
 	};
 

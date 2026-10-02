@@ -165,24 +165,19 @@
 
 	void DataSource::load(std::vector<DataSource::Item> &itens) {
  
-		// bool rc = false;
+		auto url = item.remote;
+		if(url.empty()) {
+			url = item.local.c_str();
+		}
 
-		// auto url = item.remote;
-		// if(url.empty()) {
-		// 	url = item.local.c_str();
-		// }
+		if(repo) {
+			debug("Loading ",url.c_str()," from repository '",repo->c_str(),"'");
+			repo->load(url.path().c_str(),itens);
+		} else {
+			throw runtime_error("Non repository based datasource is not implemented yet");
+		}
 
-		// if(repo && url.has_suffix("/")) {
-
-		// 	debug("Loading ",url.c_str()," from repository '",repo->c_str(),"'");
-		// 	repo->load(url.path().c_str(),itens);
-
-		// } else {
-
-		// 	throw runtime_error("Non repository based datasource is not implemented yet");
-
-		// }
-
+		Logger::String{"Loaded ",itens.size()," items from '",url.c_str(),"'"} .trace(c_str());
 	}
 
 	// Udjat::URL DataSource::url() {
