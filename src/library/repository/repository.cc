@@ -64,6 +64,9 @@
 	/// @param props The properties for URL.
 	Repository::Repository(const Udjat::Properties &props) : std::string{props["name"].c_str()}, source{props} {
 
+		allow_cache = props.get("allow-cache",true);
+		try_index_gz = props.get("try-index-gz	",true);
+
 		sanitize(URL{props["url"].c_str()});
 
 		if(source.local.empty() && source.remote.empty()) {
@@ -94,20 +97,6 @@
 		hostname = h;
 	}
 
-	void Repository::reset() {
-
-		debug("Loading repository index from ",source.remote.c_str());
-		
-		// Clear the repository contents.
-		files.clear();
-
-		// TODO: If we have SLP support, try to get the repository URL from SLP.
-
-
-		// Load index file from repository.
-		index();
-
-	}
 
 	// Udjat::URL Repository::url(bool rm) {
 
@@ -310,11 +299,18 @@
 #endif // HAVE_ZLIB
 	}
 
-	bool Repository::index() {
+	void Repository::reset() {
 
-		if(!files.empty()) {
-			return true;
-		}
+		debug("Loading repository index from ",source.remote.c_str());
+		
+		// Clear the repository contents.
+		files.clear();
+
+		// TODO: If we have SLP support, try to get the repository URL from SLP.
+
+
+		// Reload index
+		files.clear();
 
 #ifdef HAVE_ZLIB
 		if(try_index_gz) {
@@ -348,7 +344,8 @@
 						return false;
 					});
 					progress->done();
-					return index(filename.c_str());
+					index(filename.c_str());
+					return;
 
 				} else {
 
@@ -359,9 +356,9 @@
 						return false;
 					});
 					progress->done();
-					bool rc = index(filename.c_str());
+					index(filename.c_str());
 					unlink(filename.c_str());
-					return rc;
+					return;
 				}
 
 			} catch(const std::exception &e) {
@@ -377,7 +374,6 @@
 		// Parse index.html
 		parse_index_html(c_str(),"./",URL{source.remote.c_str(),"/"},files);
 
-		return true;
 	}
 
 

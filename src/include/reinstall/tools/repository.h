@@ -37,7 +37,6 @@
 		std::vector<Udjat::String> files;
 
 		bool index(const char *filename);
-		bool index();
 
 	protected:
 		bool allow_cache;
