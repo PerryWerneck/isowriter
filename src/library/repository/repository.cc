@@ -126,6 +126,40 @@
 
 	}
 
+	void Repository::absolute(Udjat::URL &remote, Udjat::URL &local) {
+
+		// Setup remote
+		{
+			String path{remote.c_str()};
+			if(path.c_str()[0] == '/' || path.c_str()[0] == '.') {
+				// It's a relative URL, adjust it to be absolute.
+				if(source.remote.empty()) {
+					remote.clear();
+				} else {
+					remote = source.remote.c_str();
+					remote += path.c_str();
+				}
+				debug("Remote URL adjusted to absolute: '",remote.c_str(),"'");
+			}
+		}
+
+		// Setup local
+		{
+			String path{local.c_str()};
+			if(path.c_str()[0] == '/' || path.c_str()[0] == '.') {
+				// It's a relative URL, adjust it to be absolute.
+				if(source.local.empty()) {
+					local.clear();
+				} else {
+					local = source.local.c_str();
+					local += path.c_str();
+				}
+				debug("Local URL adjusted to absolute: '",local.c_str(),"'");
+			}
+		}
+
+	}
+
 
 	// Udjat::URL Repository::url(bool rm) {
 

@@ -27,6 +27,7 @@
  #include <udjat/tools/configuration.h>
  #include <cstdio>
  #include <stdexcept>
+ #include <reinstall/progress.h>
  #include <memory>
 
  #define LOCAL_TMP "#(temp)#"
@@ -112,6 +113,15 @@
 
 	}
 
+	DataSource::Item::~Item() {
+		if(!strcmp(local.hostname().c_str(),LOCAL_TMP)) {
+			debug("Removing temporary file '",local.c_str(),"'");
+			if(remove(local.path().c_str())) {
+				Logger::String{"Error cleaning '",local.c_str(),"': ",strerror(errno)}.warning("DataSource");
+			}
+		}
+	}
+
 	DataSource::~DataSource() {
 		if(!strcmp(item.local.hostname().c_str(),LOCAL_TMP)) {
 			debug("Removing temporary file '",item.local.c_str(),"'");
@@ -163,6 +173,15 @@
 
 	}
 
+	void DataSource::load(DataSource::Item &item) {
+
+		item = this->item;
+		if(repo) {
+			repo->absolute(item.remote,item.local);
+		}
+
+	}
+
 	void DataSource::load(std::vector<DataSource::Item> &itens) {
  
 		auto url = item.remote;
@@ -179,6 +198,55 @@
 
 		Logger::String{"Loaded ",itens.size()," items from '",url.c_str(),"'"} .trace(c_str());
 	}
+
+	std::string DataSource::Item::save() {
+
+		auto progress = Progress::Factory();
+
+		if(local.empty()) {
+
+			progress->url(remote.c_str());
+			auto filename = remote.tempfile([progress](uint64_t current, uint64_t total){
+				return progress->set(current,total);
+			});
+
+			local = String{"file://" LOCAL_TMP "/",filename.c_str()}.c_str();
+
+		} else if(!remote.empty()) {
+
+			progress->url(remote.c_str());
+			remote.get(local.path().c_str(),[progress](uint64_t current, uint64_t total){
+				return progress->set(current,total);
+			});
+			
+		}
+
+		return local.path();
+		
+	}
+
+	void DataSource::Item::load(const std::function<bool(uint64_t current, const void *buf, size_t length)> &writer) {
+
+		auto progress = Progress::Factory();
+		progress->url(remote.c_str());
+
+		if(local.empty()) {
+
+			// No local, just get file from remote.
+			remote.get([progress,&writer](uint64_t current, uint64_t total, const void *buf, size_t length){
+				return progress->set(current,total) || writer(current,buf,length);
+			});
+
+		} else {
+
+			// Have local, check if it's updated.
+			throw runtime_error("Local file checking is not implemented yet");
+
+		}
+
+		progress->done();
+	}
+
 
 	// Udjat::URL DataSource::url() {
 

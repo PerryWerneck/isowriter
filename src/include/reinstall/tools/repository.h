@@ -67,6 +67,10 @@
 		/// @brief Load repository index.
 		/// @param itens Vector to receive the repository contents.
 		void reset();
+
+		/// @brief Adjust remote and local URLs to be absolute.
+		/// @param url The reference URL to update local/remote (depending on type).
+		void absolute(Udjat::URL &remote, Udjat::URL &local);
 	
 		void load(const char *path, std::vector<DataSource::Item> &itens);
 

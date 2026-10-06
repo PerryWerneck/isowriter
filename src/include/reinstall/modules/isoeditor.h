@@ -18,24 +18,7 @@
  */
 
  /**
-  * @brief Declare fat 32 disk image.
+  * @brief Declare a group
   */
 
- #pragma once
- #include <udjat/defs.h>
- 
- namespace Reinstall {
 
-	class UDJAT_API Disk {
-	public:
-
-		/// @brief Open device/file as disk image.
-		Disk(int fd, unsigned long long szimage = 0);
-
-		/// @brief Destroy disk, dont close the handle.
-		virtual ~Disk();
-
-
-	};
-
- }

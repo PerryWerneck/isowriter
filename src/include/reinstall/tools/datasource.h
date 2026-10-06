@@ -41,15 +41,22 @@
 			Udjat::URL remote;				///< @brief URL for remote file.
 			Udjat::String path;				///< @brief The path for source inside disk image. 
 
+			Item() = default;
 			Item(const char *remote, const char *local);
-
 			Item(const char *url);
-
 			Item(const Udjat::Properties &props);
+			~Item();
 			
 			/// @brief Sanitize URLs.
 			/// @param url The reference URL to update local/remote (depending on type).
 			void sanitize(const Udjat::URL &url);
+
+			void load(const std::function<bool(uint64_t current, const void *buf, size_t length)> &writer);
+
+			/// @brief Save item to file.
+			/// @return The path to item file.
+			std::string save();
+			
 		};
 
 		/// @brief Build datasource.
@@ -73,6 +80,9 @@
 
 		/// @brief Load URLs for datasource contents.
 		void load(std::vector<Item> &itens);
+
+		/// @brief Load a single URL for datasource
+		void load(Item &item);
 
 		// /// @brief Get URL for datasource file.
 		// Udjat::URL url();

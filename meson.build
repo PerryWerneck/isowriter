@@ -20,6 +20,7 @@ lib_src = [
 	'src/library/action.cc',
 	'src/library/builder.cc',
 	'src/library/ui/dialog.cc',
+	'src/library/image.cc',
 ]
 
 project_description = 'Installation media creation tool'
@@ -169,6 +170,9 @@ if libisofs.found()
 	conf_data.set('HAVE_ISOFS', 1)
 	conf_data.set('HAVE_ISOHYBRID', 1)
 	conf_data.set('HAVE_ISOIMAGEDIR', 1)
+	lib_src += [
+		'src/library/iso9660.cc'
+	]
 endif
 
 if libisoburn.found()

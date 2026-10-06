@@ -23,61 +23,85 @@
 
  #pragma once
  #include <udjat/defs.h>
- #include <functional>
- #include <udjat/tools/url.h>
+ #include <udjat/tools/properties.h>
  #include <reinstall/tools/datasource.h>
- #include <reinstall/tools/template.h>
- #include <udjat/ui/progress.h>
- #include <list>
 
  namespace Reinstall {
 
-	class Builder;
+	class UDJAT_API Image {
+	public:
 
-	#pragma GCC diagnostic ignored "-Woverloaded-virtual"
-	namespace Abstract {
+		Image();
+		virtual ~Image();
 
-		/// @brief Abstract disk image.
-		class UDJAT_API Image {
-		protected:
-			Reinstall::Builder *builder;
+		/// @brief Load URLs for data source contents.
+		/// @param itens The list of URLs to be loaded.
+		void load(std::vector<DataSource::Item> &itens);
 
-			/// @brief EFI boot partition image file.
-			std::string efibootpart;
+	protected:
+		virtual void load(DataSource::Item &item) = 0;
 
-#ifdef BUILD_LEGACY
-			inline Image(Reinstall::Builder *b) {
-				builder = b;
-			}
-#else
-			inline Image(Reinstall::Builder *b) : builder{b} {
-			}
-#endif // BUILD_LEGACY
-
-			/// @brief Add file to image.
-			/// @param from Full path for file on local file system.
-			/// @param to Destination file in the image.
-			virtual void append(const char *from, const char *to) = 0;
-
-		public:
-			virtual ~Image();
-
-			static const char * application_id() noexcept;
-
-			/// @brief Add sources to image.
-			/// @param sources List of data sources to append.
-			void append(std::list<std::shared_ptr<DataSource>> &sources);
-
-			/// @brief Append data source to image, download file if needed.
-			virtual void append(std::shared_ptr<DataSource> source);
-
-			virtual void write(const std::function<void(unsigned long long offset, const void *contents, unsigned long long length)> &task);
-
-			virtual void write() = 0;
-
-		};
-
-	}
+	};
 
  }
+
+//  #pragma once
+//  #include <udjat/defs.h>
+//  #include <functional>
+//  #include <udjat/tools/url.h>
+//  #include <reinstall/tools/datasource.h>
+//  #include <reinstall/tools/template.h>
+//  #include <udjat/ui/progress.h>
+//  #include <list>
+
+//  namespace Reinstall {
+
+// 	class Builder;
+
+// 	#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+// 	namespace Abstract {
+
+// 		/// @brief Abstract disk image.
+// 		class UDJAT_API Image {
+// 		protected:
+// 			Reinstall::Builder *builder;
+
+// 			/// @brief EFI boot partition image file.
+// 			std::string efibootpart;
+
+// #ifdef BUILD_LEGACY
+// 			inline Image(Reinstall::Builder *b) {
+// 				builder = b;
+// 			}
+// #else
+// 			inline Image(Reinstall::Builder *b) : builder{b} {
+// 			}
+// #endif // BUILD_LEGACY
+
+// 			/// @brief Add file to image.
+// 			/// @param from Full path for file on local file system.
+// 			/// @param to Destination file in the image.
+// 			virtual void append(const char *from, const char *to) = 0;
+
+// 		public:
+// 			virtual ~Image();
+
+// 			static const char * application_id() noexcept;
+
+// 			/// @brief Add sources to image.
+// 			/// @param sources List of data sources to append.
+// 			void append(std::list<std::shared_ptr<DataSource>> &sources);
+
+// 			/// @brief Append data source to image, download file if needed.
+// 			virtual void append(std::shared_ptr<DataSource> source);
+
+// 			virtual void write(const std::function<void(unsigned long long offset, const void *contents, unsigned long long length)> &task);
+
+// 			virtual void write() = 0;
+
+// 		};
+
+// 	}
+
+//  }
 

@@ -32,6 +32,7 @@
  #include <fatfs/diskio.h>
  #include <udjat/tools/url.h>
  #include <reinstall/modules/fatfs.h>
+ #include <reinstall/tools/datasource.h>
  #include <stdexcept>
 
  #ifdef HAVE_UNISTD_H
@@ -80,6 +81,14 @@
 
 		}
 
+		{
+			// Mount
+			auto rc = f_mount(&fs, "0:", 1);
+			if(rc != FR_OK) {
+				throw runtime_error(Logger::Message{ _("Unexpected error '{}' on f_mount"), f_strerror(rc)});
+			}
+			mounted = true;
+		}
 
 	}
 
@@ -105,15 +114,79 @@
 	}
 
 	Image::~Image() {
+
+		if(mounted) {
+			auto rc = f_unmount("0:");
+			if(rc != FR_OK) {
+				Logger::Message{ _("Unexpected error '{}' on f_umount"), strerror(rc)}.error("fatfs");
+			}
+			mounted = false;
+		}
+
 		if(fd > 0) {
 			::close(fd);
 			fd = -1;
 		}
 	}
 
-	void push_back(const Udjat::URL &url, const char *path) {
+	// void push_back(const Udjat::URL &url, const char *path) {
+
+	// }
+
+	void Image::load(Reinstall::DataSource::Item &item) {
+
+		FRESULT rc;
+
+		const char *to = item.path.c_str();
+		if(!(to && *to)) {
+			throw runtime_error(Logger::Message{_("Invalid FAT path for '{}'"), item.remote.c_str()});
+		}
+
+		// Create directories
+		{
+			const char *last = strrchr(to,'/');
+			const char *ptr = to;
+			while(ptr < last) {
+				const char *next = strchr(ptr+1,'/');
+				string path{to,(size_t)(next-to)};
+
+				rc = f_mkdir(path.c_str());
+				if(rc != FR_OK && rc != FR_EXIST) {
+					throw runtime_error(Logger::Message{_("Unable to create path fat://{} ({})"),path.c_str(),f_strerror(rc)});
+				}
+
+				ptr = next;
+			}
+		}
+
+		FIL fdst;
+		// Open file
+		rc = f_open(&fdst, to, FA_WRITE | FA_CREATE_ALWAYS);
+		if(rc != FR_OK) {
+			Logger::String{"f_open(",to,") failed with rc=",rc}.error();
+			throw runtime_error(Logger::Message{_("Unable to open fat://{} ({})"),to,f_strerror(rc)});
+		}
+
+		// Write file contents
+		item.load([&fdst,to](uint64_t current, const void *buffer, size_t len){
+
+			const BYTE *ptr = (const BYTE *) buffer;
+			while(len > 0) {
+				unsigned int wrote = 0;
+
+				FRESULT rc = f_write(&fdst, ptr, (unsigned int) len, &wrote); 
+				if(rc != FR_OK) {
+					throw runtime_error(Logger::Message{_("Error '{}' writing to fat://{}"),f_strerror(rc),to});
+				}
+				len -= wrote;
+				ptr += wrote;
+			}
+
+			return false;
+		});
 
 	}
+
 
  }
 

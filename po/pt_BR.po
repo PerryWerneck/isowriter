@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: reinstall 5.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-30 23:54-0300\n"
+"POT-Creation-Date: 2026-10-02 15:22-0300\n"
 "PO-Revision-Date: 2026-04-16 12:03-0300\n"
 "Last-Translator: Perry Werneck <perry.werneck@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <perry.werneck@gmail.com>\n"
@@ -19,15 +19,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Generator: Poedit 3.8\n"
-
-#: src/application/application.cc:168
-msgid "A valid group is required to perform this action"
-msgstr ""
-
-#: src/application/application.cc:182
-#, fuzzy, c++-format
-msgid "Required group '{}' is undefined"
-msgstr "Atributo necessário '{}' não foi encontrado"
 
 #: src/application/main.cc:112
 #, fuzzy
@@ -44,58 +35,67 @@ msgstr "Grava imagem gerada para o arquivo 'img' ao invés da usb"
 msgid "filename"
 msgstr "Nome do arquivo de imagem"
 
-#: src/application/main.cc:159
+#: src/application/main.cc:154
 msgid "Run in text mode"
 msgstr "Rodar em modo text"
 
-#: src/application/main.cc:166
+#: src/application/main.cc:161
 #, fuzzy
 msgid "Run in graphical mode"
 msgstr "Rodar em modo text"
 
-#: src/application/main.cc:173
+#: src/application/main.cc:168
 #, fuzzy
 msgid "Build options"
 msgstr "Opções disponíveis"
 
-#: src/application/main.cc:175
+#: src/application/main.cc:170
 #, fuzzy
 msgid "Auto-select image to build"
 msgstr "Seleciona destino automaticamente"
 
-#: src/application/main.cc:175
+#: src/application/main.cc:170
 msgid "path"
 msgstr ""
 
-#: src/application/main.cc:182
+#: src/application/main.cc:177
 msgid "Quit after processing"
 msgstr "Encerra ao final do processamento"
 
-#: src/application/main.cc:188
+#: src/application/main.cc:183
 #, fuzzy
 msgid "Reboot after processing"
 msgstr "Encerra ao final do processamento"
 
-#: src/application/main.cc:193
+#: src/application/main.cc:188
 msgid "Network options"
 msgstr ""
 
-#: src/application/main.cc:195
+#: src/application/main.cc:190
 #, fuzzy
 msgid "Set URL for installation repository"
 msgstr "Nenhuma mídia de instalação"
 
-#: src/application/main.cc:202
+#: src/application/main.cc:197
 msgid "Set hostname/ip for all repositories"
 msgstr ""
 
-#: src/application/main.cc:209
+#: src/application/main.cc:204
 msgid "Set installation repository from target-name"
 msgstr ""
 
-#: src/application/main.cc:215
+#: src/application/main.cc:210
 msgid "Disable SLP search"
 msgstr ""
+
+#: src/application/application.cc:173
+msgid "A valid group is required to perform this action"
+msgstr ""
+
+#: src/application/application.cc:187
+#, fuzzy, c++-format
+msgid "Required group '{}' is undefined"
+msgstr "Atributo necessário '{}' não foi encontrado"
 
 #: src/library/disk/abstract.cc:50
 msgid "Cant open disk device/file"
@@ -255,6 +255,10 @@ msgstr "Não foi possível alocar espaço para o arquivo de saída"
 msgid "Required repository '{}' not found at {}"
 msgstr "Repositório '{}' não foi encontrado no caminho {}"
 
+#: src/library/repository/repository.cc:360
+msgid "Loading repository index"
+msgstr "Carregando índice do repositório"
+
 #: src/library/writer.cc:54
 msgid "The device writer is not available"
 msgstr "Gravador de dispositivo não está disponível"
@@ -323,21 +327,21 @@ msgstr "DUD  '{}' não tem attributos 'path' ou 'url'"
 msgid "Kernel parameter '{}' has an empty value"
 msgstr "Parâmetro de kernel '{}' tem valor vazio"
 
-#: src/library/datasource.cc:60
+#: src/library/datasource.cc:58
 msgid "A repository is required to use relative URLs"
 msgstr ""
 
-#: src/library/datasource.cc:104
+#: src/library/datasource.cc:102
 #, fuzzy
 msgid "Unable to identify the path for source"
 msgstr "Não foi possível encontrar um ponto de montagem para '{}'"
 
-#: src/library/datasource.cc:145
+#: src/library/datasource.cc:143
 #, fuzzy, c++-format
 msgid "Invalid image path: {}"
 msgstr "Argumento inválido para repositório: {}"
 
-#: src/library/datasource.cc:149
+#: src/library/datasource.cc:147
 msgid "At least one URL is required"
 msgstr ""
 
@@ -605,9 +609,6 @@ msgstr "Inicializando..."
 
 #~ msgid "Unknown error"
 #~ msgstr "Erro inesperado"
-
-#~ msgid "Loading repository index"
-#~ msgstr "Carregando índice do repositório"
 
 #, c++-format
 #~ msgid "Kernel parameter for repository '{}' has an empty value"

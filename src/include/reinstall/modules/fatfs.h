@@ -26,10 +26,12 @@
  #include <udjat/tools/properties.h>
  #include <fatfs/ff.h>
  #include <udjat/tools/url.h>
+ #include <reinstall/image.h>
+ #include <reinstall/tools/datasource.h>
 
  namespace FatFS {
 
-	class UDJAT_API Image {
+	class UDJAT_API Image : public Reinstall::Image {
 	public:
 		struct Settings {
 			MKFS_PARM parms = { FM_FAT32, 0, 0, 0, 0};	///< Format parameter structure used for f_mkfs()
@@ -49,10 +51,23 @@
 		/// @param path The path for file inside fat image.
 		void push_back(const Udjat::URL &url, const char *path);
 
+		inline void load(std::vector<Reinstall::DataSource::Item> &itens) {
+			Reinstall::Image::load(itens);
+		}
+
+
+	protected:
+		void load(Reinstall::DataSource::Item &item) override;
+
 	private:
 
 		/// @brief The handle of fat device.
 		int fd = -1;
+
+		/// @brief Is the device mounted?
+		bool mounted = false;
+
+		FATFS fs;
 
 		/// @brief Initialize an empty fat file or device.
 		/// @param settings The settings for new image.

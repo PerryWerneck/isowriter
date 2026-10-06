@@ -39,6 +39,10 @@
 	#include <reinstall/modules/fatfs.h>
  #endif // HAVE_FATFS
 
+ #ifdef HAVE_LIBISOFS
+	#include <reinstall/tools/iso9660.h>
+ #endif // HAVE_LIBISOFS
+
  #include <reinstall/tools/builder.h>
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/repository.h>
@@ -93,12 +97,40 @@
 				std::vector<DataSource::Item> itens;
 				builder.load(itens);
 
-
+				disk.load(itens);
 
 				return "FatFS test passed";
 			}
 		},
 #endif // HAVE_FATFS 
+#ifdef HAVE_LIBISOFS
+		 TestSuite::Case{
+			"isoeditor", "Test ISOEditor",
+			[](std::ostream &stream) {
+
+				DataSource source{
+					"netinstall",
+					"https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Current.iso",
+					"file:///tmp/iso-editor-source.iso"
+				};
+
+				DataSource::Item isofile;
+				source.load(isofile);
+
+				stream	<< "From '" << isofile.remote.c_str() << "'" << endl
+						<< "To   '" << isofile.local.c_str() << "'" << endl;
+
+				stream << "Loading image" << endl;
+				Iso9660::Image image{isofile.save().c_str()};
+
+
+				stream << "Writing modified image" << endl;
+				image.write("/tmp/test.iso");
+
+				return "ISOEditor test passed";
+			}
+		},
+#endif // HAVE_LIBISOFS
 		 TestSuite::Case{
 			"isobuilder", "Test ISOBuilder",
 			[](std::ostream &stream) {
