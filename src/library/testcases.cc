@@ -47,6 +47,7 @@
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/repository.h>
  #include <reinstall/progress.h>
+ #include <reinstall/tools/template.h>
 
  using namespace Udjat;
  using namespace Reinstall;
@@ -123,6 +124,12 @@
 				stream << "Loading image" << endl;
 				Iso9660::Image image{isofile.save().c_str()};
 
+				// Apply template
+				Reinstall::Template grubcfg{"grub2","*/grub.cfg"};
+
+				// Save template to apply contents.
+				grubcfg.save();
+				stream << "Replacing '" << grubcfg.path << "'" << endl;
 
 				stream << "Writing modified image" << endl;
 				image.write("/tmp/test.iso");

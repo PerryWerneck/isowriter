@@ -25,12 +25,13 @@
  #include <udjat/tools/logger.h>
  #include <udjat/tools/intl.h>
  #include <udjat/tools/configuration.h>
+ #include <udjat/tools/file/temporary.h>
  #include <cstdio>
  #include <stdexcept>
  #include <reinstall/progress.h>
  #include <memory>
 
- #define LOCAL_TMP "#(temp)#"
+ #define LOCAL_TMP "tempfile.local"
 
  using namespace Udjat;
  using namespace std;
@@ -246,6 +247,14 @@
 
 		progress->done();
 	}
+
+	std::string DataSource::Item::filename() {
+		if(local.empty()) {
+			local = String{"file://" LOCAL_TMP "/",File::Temporary::create().c_str()}.c_str();
+		}
+		return local.path();
+	}
+
 
 
 	// Udjat::URL DataSource::url() {

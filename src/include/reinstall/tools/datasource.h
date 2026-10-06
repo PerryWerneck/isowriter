@@ -51,11 +51,15 @@
 			/// @param url The reference URL to update local/remote (depending on type).
 			void sanitize(const Udjat::URL &url);
 
-			void load(const std::function<bool(uint64_t current, const void *buf, size_t length)> &writer);
+			virtual void load(const std::function<bool(uint64_t current, const void *buf, size_t length)> &writer);
 
 			/// @brief Save item to file.
 			/// @return The path to item file.
-			std::string save();
+			virtual std::string save();
+
+			/// @brief Get local filename, create temporary if necessary.
+			/// @return The filename for this item.
+			std::string filename();
 			
 		};
 
