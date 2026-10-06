@@ -42,7 +42,7 @@
  namespace Reinstall {
 
 	Template::Template(const Udjat::Properties &props) 
-        : std::string{props["name"].c_str()}, Udjat::Template{props} {
+        : std::string{props["name"].c_str()}, Udjat::Template{props,"file"} {
 
         this->path = props["path"];
     }
