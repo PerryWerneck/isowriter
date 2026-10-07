@@ -39,7 +39,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Template::Template(const Udjat::Properties &props) 
         : std::string{props["name"].c_str()}, Udjat::Template{props,"file"} {
@@ -104,7 +104,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	Template::Template(const Udjat::Properties &node)
 // 		: Udjat::NamedObject{node}, 

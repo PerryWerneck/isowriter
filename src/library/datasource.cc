@@ -36,7 +36,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	DataSource::DataSource(const char *name, std::shared_ptr<Repository> repository, const char *path) : std::string{name}, repo{repository}, item{path} {
 		item.sanitize(item.remote);
@@ -376,7 +376,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	/*
 // 	DataSource::Path::Path(const XML::Node &node) {

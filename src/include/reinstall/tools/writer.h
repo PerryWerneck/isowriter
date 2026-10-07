@@ -26,7 +26,7 @@
  #include <string>
  #include <memory>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API Writer : public std::string {
 	protected:
@@ -65,7 +65,7 @@
 //  #include <udjat/tools/string.h>
 //  #include <udjat/tools/logger.h>
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	/// @brief Abstract disk device.
 // 	class UDJAT_API Writer {
@@ -122,7 +122,7 @@
 
 // 		/// @brief Select/detect and open device.
 // 		/// @return true if the device is open, false it not.
-// 		virtual bool open(const Reinstall::Dialog &settings);
+// 		virtual bool open(const IsoWriter::Dialog &settings);
 
 // 		/// @brief Get device length.
 // 		/// @return The device length.

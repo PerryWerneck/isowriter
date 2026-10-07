@@ -45,7 +45,7 @@
 
 	class UDJAT_API Image {
 	private:
-		Reinstall::DataSource::Item source;
+		IsoWriter::DataSource::Item source;
 		IsoImage *image = NULL;
 		IsoDataSource *dsrc = NULL;
 		IsoReadOpts *ropts = NULL;
@@ -55,7 +55,7 @@
 		/// @brief Sources passed to push_back(). libisofs reads their files
 		/// when the image is written, and Item deletes temporary files from
 		/// its destructor.
-		std::vector<std::shared_ptr<Reinstall::DataSource::Item>> mapped;
+		std::vector<std::shared_ptr<IsoWriter::DataSource::Item>> mapped;
 
 	public:
 
@@ -66,7 +66,7 @@
 
 		/// @brief Insert a disk file into the image, like xorriso -map.
 		/// @param source Disk object to insert. source->path is the ISO path.
-		void push_back(std::shared_ptr<Reinstall::DataSource::Item> source);
+		void push_back(std::shared_ptr<IsoWriter::DataSource::Item> source);
 
 		/// @brief Write iso image to file.
 		void write();
@@ -86,7 +86,7 @@
 
 //  namespace iso9660 {
 
-// 	class UDJAT_API Image : public Reinstall::Abstract::Image {
+// 	class UDJAT_API Image : public IsoWriter::Abstract::Image {
 // 	public:
 
 // 		/// @brief ISO9660 image definitions.
@@ -126,7 +126,7 @@
 
 // 		};
 
-// 		Image(Reinstall::Builder *builder, std::shared_ptr<Settings> settings);
+// 		Image(IsoWriter::Builder *builder, std::shared_ptr<Settings> settings);
 // 		virtual ~Image();
 
 // 		void pre(Udjat::Abstract::Object &object);
@@ -136,8 +136,8 @@
 // 		void write() override;
 
 
-// 		inline void append(std::list<std::shared_ptr<Reinstall::DataSource>> &sources) {
-// 			Reinstall::Abstract::Image::append(sources);
+// 		inline void append(std::list<std::shared_ptr<IsoWriter::DataSource>> &sources) {
+// 			IsoWriter::Abstract::Image::append(sources);
 // 		}
 
 // 	protected:

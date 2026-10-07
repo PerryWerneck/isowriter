@@ -41,7 +41,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Repository::KParm::KParm(const Udjat::Properties &node) {
 

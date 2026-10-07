@@ -46,17 +46,17 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	class UDJAT_PRIVATE IsoWriter::Module::Action : public Reinstall::Action {
+	class UDJAT_PRIVATE IsoWriter::Module::Action : public IsoWriter::Action {
 	private:
-		Reinstall::FileSource iso;
+		IsoWriter::FileSource iso;
 		bool use_cached = true;
 
 	public:
 
 		Action(const Udjat::Properties &props)
-			: Reinstall::Action{props}, iso{props}, use_cached{props.get("cache",use_cached)} {
+			: IsoWriter::Action{props}, iso{props}, use_cached{props.get("cache",use_cached)} {
 	
 		}
 
@@ -74,7 +74,7 @@
 				status.sub_title(_("Updating ISO image"));
 				auto path = iso.save(*this);
 				status.sub_title(_("Writing ISO image"));
-				Reinstall::Writer::getInstance().write(path.c_str());
+				IsoWriter::Writer::getInstance().write(path.c_str());
 
 			} else {
 
@@ -102,7 +102,7 @@
 					Logger::String{"ISO image saved to '",filename.c_str(),"'"}.trace();
 
 					status.sub_title(_("Writing ISO image"));
-					Reinstall::Writer::getInstance().write(filename.c_str());
+					IsoWriter::Writer::getInstance().write(filename.c_str());
 
 				} catch(...) {
 
@@ -129,7 +129,7 @@
 	// Udjat::Properties::Parser interface.
 	bool IsoWriter::Module::parse(const Udjat::Properties &node) {
 		// Logger::String{"Building action '",node.attribute("name").as_string(),"' from '",node.path(),"'"}.info();
-		Reinstall::Application::getInstance().push_back(node,make_shared<IsoWriter::Module::Action>(node));
+		IsoWriter::Application::getInstance().push_back(node,make_shared<IsoWriter::Module::Action>(node));
 		return true;
 	}
 

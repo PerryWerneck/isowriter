@@ -48,7 +48,7 @@
  static bool has_graphical_session();
 #endif
 
- using namespace Reinstall;
+ using namespace IsoWriter;
  using namespace Udjat;
  using namespace std;
 
@@ -86,7 +86,7 @@
 		if(ptr) {
 			ptr++;
 			if(strcmp(ptr,"reinstall-enable") == 0 || strcmp(ptr,"reinstall-system") == 0) {
-				Reinstall::Application::non_interactive(true);
+				IsoWriter::Application::non_interactive(true);
 			}
 		}
 
@@ -107,12 +107,12 @@
 		using Argument = ArgumentParser::Argument;
 		using Result = ArgumentParser::Result;
 
-		if(!Reinstall::Application::non_interactive()) {
+		if(!IsoWriter::Application::non_interactive()) {
 			parser.append(
 				Argument{
 					'y', "non-interactive", _("Run in non-interactive mode"),
 					[](const char *, char) {
-						Reinstall::Application::non_interactive(true);
+						IsoWriter::Application::non_interactive(true);
 						return Result::Handled;
 					}
 				}
@@ -135,7 +135,7 @@
 				'i', "interactive-testcases", "Run testsuite",
                 [](const char *arg, char) {
 
-					Reinstall::Application application;
+					IsoWriter::Application application;
 
 					TestSuite testsuite;
 					udjat_register_tests(testsuite);
@@ -171,7 +171,7 @@
 			Argument{
 				'S', "select", _("Auto-select image to build"), _("path"),
                 [](const char *arg, char) {
-					Reinstall::Application::set_selected_path(arg);
+					IsoWriter::Application::set_selected_path(arg);
 					return Result::Handled;
 				}
 			},
@@ -246,7 +246,7 @@
 
 	try {
 
-		return Reinstall::Application::run_tui();
+		return IsoWriter::Application::run_tui();
 
 	} catch(const std::exception &e) {
 

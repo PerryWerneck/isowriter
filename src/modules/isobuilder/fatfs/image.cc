@@ -133,7 +133,7 @@
 
 	// }
 
-	void Image::load(Reinstall::DataSource::Item &item) {
+	void Image::load(IsoWriter::DataSource::Item &item) {
 
 		FRESULT rc;
 
@@ -259,13 +259,13 @@
 // 		return _("Unexpected error from libfatfs");
 // 	}
 
-// 	class Image::Disk : private Udjat::File::Temporary, public Reinstall::Abstract::Disk {
+// 	class Image::Disk : private Udjat::File::Temporary, public IsoWriter::Abstract::Disk {
 // 	private:
 // 		FATFS fs;
 // 		bool mounted = false;
 
 // 	public:
-// 		Disk(const std::shared_ptr<Settings> settings) : Reinstall::Abstract::Disk{Udjat::File::Handler::fd, settings->imglen} {
+// 		Disk(const std::shared_ptr<Settings> settings) : IsoWriter::Abstract::Disk{Udjat::File::Handler::fd, settings->imglen} {
 
 // 			if(disk_ioctl(0, CTRL_BIND_FD, &fd) != RES_OK) {
 // 				throw runtime_error(_("Cant bind fatfs to disk image"));
@@ -329,16 +329,16 @@
 // 	};
 
 // #ifdef BUILD_LEGACY
-// 	Image::Image(Reinstall::Builder *builder, std::shared_ptr<Settings> s)
-// 		: Reinstall::Abstract::Image{builder} {
+// 	Image::Image(IsoWriter::Builder *builder, std::shared_ptr<Settings> s)
+// 		: IsoWriter::Abstract::Image{builder} {
 
 // 		settings = s;
 // 		disk = make_shared<Disk>(settings);
 
 // 	}
 // #else
-// 	Image::Image(Reinstall::Builder *builder, std::shared_ptr<Settings> s)
-// 		: Reinstall::Abstract::Image{builder}, settings{s}, disk{make_shared<Disk>(settings)} {
+// 	Image::Image(IsoWriter::Builder *builder, std::shared_ptr<Settings> s)
+// 		: IsoWriter::Abstract::Image{builder}, settings{s}, disk{make_shared<Disk>(settings)} {
 // 	}
 // #endif // BUILD_LEGACY
 
@@ -346,7 +346,7 @@
 
 // 	}
 
-// 	void Image::append(std::shared_ptr<Reinstall::DataSource> source) {
+// 	void Image::append(std::shared_ptr<IsoWriter::DataSource> source) {
 
 // 		const char *to = source->path();
 
@@ -502,10 +502,10 @@
 // 		unsigned long long total = disk->length();
 // 		size_t buflen = disk->block_size();
 
-// 		auto &writer = Reinstall::Writer::getInstance();
+// 		auto &writer = IsoWriter::Writer::getInstance();
 // 		writer.size(total);
 
-// 		writer.open(Reinstall::Dialog{});
+// 		writer.open(IsoWriter::Dialog{});
 
 // 		auto progress = Udjat::Dialog::Progress::getInstance();
 // 		progress->url(writer.url());

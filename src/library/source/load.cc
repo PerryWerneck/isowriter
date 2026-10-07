@@ -45,7 +45,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	void DataSource::load(const Udjat::Properties &node, vector<std::shared_ptr<DataSource>> &sources, const char *nodename) {
 
@@ -64,7 +64,7 @@
 			load(node,sources,"source");
 
 			// ... then load <driver-update-disk />
-			class DUD : public Reinstall::FileSource {
+			class DUD : public IsoWriter::FileSource {
 			public:
 				DUD(const Udjat::Properties &node, const char *path) : FileSource{node} {
 					url.path = path;

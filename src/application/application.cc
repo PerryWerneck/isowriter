@@ -39,7 +39,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Application * Application::instance = nullptr;
 	bool Application::non_interactive_mode = false;
@@ -59,10 +59,10 @@
 #ifndef _WIN32
 			// if(Config::Value<bool>{"modules","grub2",true}) {
 
-			// 	Reinstall::Grub2::Module::Factory("grub");
+			// 	IsoWriter::Grub2::Module::Factory("grub");
 
 			// 	if(Config::Value<bool>{"application","legacy",false}) {
-			// 		Reinstall::Grub2::Module::Factory("grub");
+			// 		IsoWriter::Grub2::Module::Factory("grub");
 			// 	}
 
 			// }
@@ -75,17 +75,17 @@
 
 			// if(Config::Value<bool>{"modules","isowriter",true}) {
 			// 	Logger::String{"Loading isowriter module"}.info();
-			// 	Reinstall::IsoWriter::Module::Factory();
+			// 	IsoWriter::IsoWriter::Module::Factory();
 			// }
 
 			// if(Config::Value<bool>{"modules","isobuilder",true}) {
 
 			// 	Logger::String{"Loading isobuilder module"}.info();
-			// 	Reinstall::IsoBuilder::Module::Factory();
+			// 	IsoWriter::IsoBuilder::Module::Factory();
 
 			// 	if(Config::Value<bool>{"application","legacy",false}) {
 			// 		Logger::String{"Loading network-installer module (legacy)"}.info();
-			// 		Reinstall::IsoBuilder::Module::Factory("netinstall","network-installer");
+			// 		IsoWriter::IsoBuilder::Module::Factory("netinstall","network-installer");
 			// 	}
 
 			// }

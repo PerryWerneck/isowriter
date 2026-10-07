@@ -30,7 +30,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Group::Group(const Udjat::Properties &props) : String{props["name"].c_str()} {
 	

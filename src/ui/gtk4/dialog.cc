@@ -37,14 +37,14 @@
  using namespace std;
  using namespace Gtk;
 
- std::shared_ptr<Reinstall::Dialog> TopLevel::DialogFactory(const char *name, const Udjat::Properties &node, const char *msg, const Reinstall::Dialog::Option buttons) {
+ std::shared_ptr<IsoWriter::Dialog> TopLevel::DialogFactory(const char *name, const Udjat::Properties &node, const char *msg, const IsoWriter::Dialog::Option buttons) {
 
 	class Popup : public MessageDialog {
 	public:
 
 		// https://gnome.pages.gitlab.gnome.org/gtkmm/classGtk_1_1Dialog.html
 
-		Popup(const Reinstall::Dialog &defs) : MessageDialog{""} {
+		Popup(const IsoWriter::Dialog &defs) : MessageDialog{""} {
 			gtk_window_set_transient_for(
 				GTK_WINDOW(gobj()),
 				gtk_application_get_active_window(GTK_APPLICATION(g_application_get_default()))
@@ -57,7 +57,7 @@
 
 	};
 
-	class Dialog : public Reinstall::Dialog {
+	class Dialog : public IsoWriter::Dialog {
 	private:
 
 		enum Responses {
@@ -71,7 +71,7 @@
 		};
 
 	public:
-		Dialog(const Udjat::Properties &node, const char *msg, const Option option) : Reinstall::Dialog{node,msg,option} {
+		Dialog(const Udjat::Properties &node, const char *msg, const Option option) : IsoWriter::Dialog{node,msg,option} {
 		}
 
 		virtual ~Dialog() {
@@ -195,7 +195,7 @@
 
 			Glib::signal_idle().connect_once([this,str](){
 
-				if(Reinstall::Dialog::present(str->c_str())) {
+				if(IsoWriter::Dialog::present(str->c_str())) {
 					// Already presented, no need to do anything else.
 					return;
 				}

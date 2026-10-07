@@ -26,7 +26,7 @@
  #include <udjat/tools/properties.h>
  #include <udjat/tools/object.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API SLPClient : public Udjat::NamedObject {
 	private:

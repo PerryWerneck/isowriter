@@ -43,7 +43,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	std::string Repository::hostname;
 
@@ -206,7 +206,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	Repository::Repository(const Udjat::Properties &node) : FileSource{node,false}, KernelParameter{node}, kparm{node}, slpclient{SLPClient::Factory(node)} {
 

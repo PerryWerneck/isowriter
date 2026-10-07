@@ -26,7 +26,7 @@
  #include <udjat/defs.h>
  #include <reinstall/dialog.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	/// @brief Abstract class for removable device dialog.
 	/// @details This class is used to detect removable devices, such as USB drives, and

@@ -27,9 +27,9 @@
  #include <udjat/tools/object.h>
  #include <reinstall/tools/datasource.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	class UDJAT_API Script : private Reinstall::FileSource {
+	class UDJAT_API Script : private IsoWriter::FileSource {
 	public:
 
 		Script(const Udjat::Abstract::Object &parent, const Udjat::Properties &node);

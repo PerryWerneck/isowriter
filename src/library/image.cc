@@ -26,7 +26,7 @@
  #include <reinstall/image.h>
  #include <reinstall/tools/datasource.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Image::Image() {
 	}
@@ -67,7 +67,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	const char * Abstract::Image::application_id() noexcept {
 // 		return PACKAGE_STRING;
@@ -110,7 +110,7 @@
 // 			{
 // 				// Load file names.
 // 				std::vector<string> files;
-// 				Reinstall::Disk::Fat32 disk{from.c_str()};
+// 				IsoWriter::Disk::Fat32 disk{from.c_str()};
 
 // 				// Load filename first to prevent changes.
 // 				disk.for_each("",[&files](const char *filename){
@@ -152,8 +152,8 @@
 // 	/*
 // 	void Abstract::Image::write() {
 
-// 		Reinstall::Writer &writer = Reinstall::Writer::getInstance();
-// 		writer.open(Reinstall::Dialog());
+// 		IsoWriter::Writer &writer = IsoWriter::Writer::getInstance();
+// 		writer.open(IsoWriter::Dialog());
 
 // 		{
 // 			auto progress = Udjat::Dialog::Progress::getInstance();

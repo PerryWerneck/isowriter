@@ -38,7 +38,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	std::string Writer::devname;
 
@@ -137,7 +137,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	std::string Writer::selected;
 // 	Writer * Writer::instance = nullptr;
@@ -196,7 +196,7 @@
 // 			size(st.st_size);
 
 // 			{
-// 				Reinstall::Dialog dummy;
+// 				IsoWriter::Dialog dummy;
 // 				open(dummy);
 // 			}
 			
@@ -239,7 +239,7 @@
 
 // 	}
 
-// 	bool Writer::open(const Reinstall::Dialog &settings) {
+// 	bool Writer::open(const IsoWriter::Dialog &settings) {
 
 // 		if(!selected.empty()) {
 

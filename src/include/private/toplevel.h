@@ -36,7 +36,7 @@
  #include <udjat/ui/progress.h>
  #include <udjat/ui/status.h>
 
- class UDJAT_PRIVATE TopLevel : public Gtk::ApplicationWindow, protected Reinstall::Application, private Reinstall::Writer {
+ class UDJAT_PRIVATE TopLevel : public Gtk::ApplicationWindow, protected IsoWriter::Application, private IsoWriter::Writer {
  private:
  public:
 	TopLevel();
@@ -117,11 +117,11 @@
 	void failed(const std::exception &e) noexcept override;
 
 	/// @brief Open target device for writing.
-	/// @see Reinstall::Writer::open()
+	/// @see IsoWriter::Writer::open()
 	/// @return true if the device was open, false if not.
-	bool open(const Reinstall::Dialog &settings) override;
+	bool open(const IsoWriter::Dialog &settings) override;
 
-	std::shared_ptr<Reinstall::Dialog> DialogFactory(const char *name, const Udjat::Properties &node, const char *message, const Reinstall::Dialog::Option option) override;	
+	std::shared_ptr<IsoWriter::Dialog> DialogFactory(const char *name, const Udjat::Properties &node, const char *message, const IsoWriter::Dialog::Option option) override;	
 
  };
 
@@ -133,7 +133,7 @@
 	NonInteractiveWindow();
 	~NonInteractiveWindow() override;
 
-	std::shared_ptr<Reinstall::Group> group_factory(const Udjat::Properties &node) override;
+	std::shared_ptr<IsoWriter::Group> group_factory(const Udjat::Properties &node) override;
 
 	void activate() noexcept override;
 	void loaded() noexcept override;
@@ -168,9 +168,9 @@
 	~InteractiveWindow() override;
 
  protected:
-	std::shared_ptr<Reinstall::Group> group_factory(const Udjat::Properties &node) override;
+	std::shared_ptr<IsoWriter::Group> group_factory(const Udjat::Properties &node) override;
 
-	void select(std::shared_ptr<Reinstall::Action> action) override;
+	void select(std::shared_ptr<IsoWriter::Action> action) override;
 
 	void activate() noexcept override;
 

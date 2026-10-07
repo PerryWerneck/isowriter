@@ -51,7 +51,7 @@
  #include <reinstall/tools/writer.h>
 
  using namespace Udjat;
- using namespace Reinstall;
+ using namespace IsoWriter;
  using namespace std;
 
  UDJAT_API void udjat_register_tests(Udjat::TestSuite &suite) noexcept {
@@ -126,9 +126,9 @@
 				Iso9660::Image image{isofile.save().c_str()};
 
 				// Apply template
-				class Template : public Reinstall::Template {
+				class Template : public IsoWriter::Template {
 				public:
-					Template(const char *name, const char *path) : Reinstall::Template{name,path} {
+					Template(const char *name, const char *path) : IsoWriter::Template{name,path} {
 					}
 
 					void apply(std::ostream &out) {

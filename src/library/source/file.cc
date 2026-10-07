@@ -36,7 +36,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	FileSource::FileSource(const char *path) {
 		url.remote = url.local = path;

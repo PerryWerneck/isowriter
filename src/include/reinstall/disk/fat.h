@@ -28,7 +28,7 @@
 
  #include <reinstall/disk/abstract.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	namespace Disk {
 

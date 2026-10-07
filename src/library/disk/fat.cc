@@ -88,7 +88,7 @@
  };
 
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	static const char * error_msg(int rc) {
 

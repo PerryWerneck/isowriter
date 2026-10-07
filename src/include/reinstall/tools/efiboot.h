@@ -25,7 +25,7 @@
  #include <udjat/tools/object.h>
  #include <memory>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	/// @brief The EFI Boot Image;
 	class UDJAT_API EFIBootImage : public Udjat::NamedObject {

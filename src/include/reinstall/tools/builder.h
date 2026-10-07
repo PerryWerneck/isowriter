@@ -29,13 +29,13 @@
  #include <memory>
  #include <string>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	class UDJAT_API Builder : public Reinstall::Action {
+	class UDJAT_API Builder : public IsoWriter::Action {
 	public:
 
 		/// @brief System kernel.
-		class Kernel : public Reinstall::DataSource {
+		class Kernel : public IsoWriter::DataSource {
 		public:
 			Kernel(const char *remote, const char *local = nullptr) : DataSource{remote,local} {		
 			}
@@ -43,7 +43,7 @@
 		};
 
 		/// @brief System initrd
-		class InitRD : public Reinstall::DataSource {
+		class InitRD : public IsoWriter::DataSource {
 		public:
 			InitRD(const char *remote, const char *local = nullptr) : DataSource{remote,local} {		
 			}
@@ -73,12 +73,12 @@
 
 		};
 
-		Builder(const char *name) : Reinstall::Action{name} {
+		Builder(const char *name) : IsoWriter::Action{name} {
 		};
 
 		Builder(const Udjat::Properties &props);
 
-		bool push_back(std::shared_ptr<Reinstall::DataSource> source);
+		bool push_back(std::shared_ptr<IsoWriter::DataSource> source);
 		bool push_back(std::shared_ptr<KernelParameter> kparm);
 
 		/// @brief Load URLs for builder files.
@@ -90,7 +90,7 @@
 		// bool for_each(const std::function<bool(const Udjat::URL &from, const char *to)> &task) const;
 
 	private:
-		std::vector<std::shared_ptr<Reinstall::DataSource>> sources;
+		std::vector<std::shared_ptr<IsoWriter::DataSource>> sources;
 		std::vector<std::shared_ptr<KernelParameter>> kparms;
 
 	protected:
@@ -110,13 +110,13 @@
 //  #include <reinstall/image.h>
 //  #include <reinstall/tools/efiboot.h>
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
-// 	class UDJAT_API Builder : public Reinstall::Action {
+// 	class UDJAT_API Builder : public IsoWriter::Action {
 // 	private:
-// 		std::vector<std::shared_ptr<Reinstall::DataSource>> sources;
-// 		std::vector<std::shared_ptr<Reinstall::Template>> templates;
-// 		std::vector<std::shared_ptr<Reinstall::KernelParameter>> kparms;
+// 		std::vector<std::shared_ptr<IsoWriter::DataSource>> sources;
+// 		std::vector<std::shared_ptr<IsoWriter::Template>> templates;
+// 		std::vector<std::shared_ptr<IsoWriter::KernelParameter>> kparms;
 
 // 		/// @brief Append datasource in list, check for tempalte.
 // 		void push_back(std::list<std::shared_ptr<DataSource>> &files, std::shared_ptr<DataSource> value);
@@ -142,7 +142,7 @@
 
 // 		/// @brief Find template from filename.
 // 		/// @return Valid template ptr if filename should be replaced.
-// 		std::shared_ptr<Reinstall::Template> tmplt(const char *filename);
+// 		std::shared_ptr<IsoWriter::Template> tmplt(const char *filename);
 
 // 		void prepare(std::list<std::shared_ptr<DataSource>> &files);
 

@@ -41,7 +41,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Abstract::Disk::Disk(int fd, unsigned long long szimage) {
 

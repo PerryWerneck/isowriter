@@ -28,7 +28,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	std::shared_ptr<Dialog> Dialog::Factory(const char *name, const Udjat::Properties &node, const char *message, const Option option) {
 
@@ -38,7 +38,7 @@
 		return make_shared<Dialog>(name);
 	}
 
-	Reinstall::Dialog::Dialog(const char *name) : std::string{name} {
+	IsoWriter::Dialog::Dialog(const char *name) : std::string{name} {
 
 		String group{"dialog-",name};
 
@@ -125,7 +125,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	Dialog::Option Dialog::presets = Dialog::None;
 

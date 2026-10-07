@@ -51,7 +51,7 @@
 
 #ifdef USE_MESSAGE_DIALOG
 
- GtkRemovableDeviceDialog::GtkRemovableDeviceDialog(Reinstall::Writer &w, const Reinstall::Dialog &dialog, bool allow_output_to_file)
+ GtkRemovableDeviceDialog::GtkRemovableDeviceDialog(IsoWriter::Writer &w, const IsoWriter::Dialog &dialog, bool allow_output_to_file)
  : 	Gtk::MessageDialog{"",false,Gtk::MessageType::QUESTION,Gtk::ButtonsType::NONE}, 
  	volume_monitor{Gio::VolumeMonitor::get()}, 	cancel{_("_Cancel"),true},
 	apply{_("C_ontinue"),true} {
@@ -316,7 +316,7 @@
 
 	debug("Selected device: ",device->description.c_str());
 
- 	Reinstall::Writer::getInstance().close();
+ 	IsoWriter::Writer::getInstance().close();
 
 	switch(device->type) {
 	case DeviceHolder::FileDialog:
@@ -347,7 +347,7 @@
 				try {
 
 					debug("Opening device");
-					Reinstall::Writer::getInstance().open(devname.c_str());
+					IsoWriter::Writer::getInstance().open(devname.c_str());
 
 				} catch(const std::system_error &e) {
 
@@ -386,7 +386,7 @@
 				MainLoop::getInstance().run([this,error_message](){
 					if(error_message.empty()) {
 						apply.set_label(_("C_ontinue"));
-						apply.set_sensitive((bool) Reinstall::Writer::getInstance());
+						apply.set_sensitive((bool) IsoWriter::Writer::getInstance());
 					} else {
 						apply.set_label(error_message);
 						apply.set_sensitive(false);

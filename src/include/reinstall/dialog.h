@@ -32,7 +32,7 @@
  #include <vector>
  #include <cstdint>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	namespace Progress {
 

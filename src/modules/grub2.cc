@@ -71,12 +71,12 @@
 	return str.as_quark();
  }
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	class UDJAT_PRIVATE Grub2::Module::Action : public Reinstall::Action {
+	class UDJAT_PRIVATE Grub2::Module::Action : public IsoWriter::Action {
 	private:
 
-		class Kernel : public Reinstall::FileSource {
+		class Kernel : public IsoWriter::FileSource {
 		public:
 			Kernel(const Udjat::Abstract::Object &object, const Udjat::Properties &node) : FileSource{node,"kernel"} {
 				url.local = ::PathFactory(object,node,"kernel","file://${boot.path.mount}${boot.path.relative}/${filename}");
@@ -88,7 +88,7 @@
 			}
 		};
 
-		class Init : public Reinstall::FileSource {
+		class Init : public IsoWriter::FileSource {
 		public:
 			Init(const Udjat::Abstract::Object &object, const Udjat::Properties &node) : FileSource{node,"init"} {
 				url.local = ::PathFactory(object,node,"initrd","file://${boot.path.mount}${boot.path.relative}/${filename}");
@@ -100,7 +100,7 @@
 			}
 		};
 
-		class DUD : public Reinstall::FileSource {
+		class DUD : public IsoWriter::FileSource {
 			public:
 				DUD(const Udjat::Properties &node, const char *path) : FileSource{node} {
 					url.local = path;
@@ -108,15 +108,15 @@
 
 		};
 
-		std::vector<std::shared_ptr<Reinstall::DataSource>> sources;
-		std::vector<std::shared_ptr<Reinstall::KernelParameter>> kparms;
-		std::vector<std::shared_ptr<Reinstall::Template>> templates;
-		std::vector<std::shared_ptr<Reinstall::Script>> scripts;
+		std::vector<std::shared_ptr<IsoWriter::DataSource>> sources;
+		std::vector<std::shared_ptr<IsoWriter::KernelParameter>> kparms;
+		std::vector<std::shared_ptr<IsoWriter::Template>> templates;
+		std::vector<std::shared_ptr<IsoWriter::Script>> scripts;
 
 		const char *boot_label = nullptr;
 
 	public:
-		Action(const Udjat::Properties &node) : Reinstall::Action{node} {
+		Action(const Udjat::Properties &node) : IsoWriter::Action{node} {
 
 			static const char *labels[] = {
 				"grub-label",
@@ -164,13 +164,13 @@
 			// }
 
 			// Load kernel parameters.
-			Reinstall::KernelParameter::load(node,kparms,true);
+			IsoWriter::KernelParameter::load(node,kparms,true);
 
 			// Load templates
-			Reinstall::Template::load(*this,node,templates);
+			IsoWriter::Template::load(*this,node,templates);
 
 			// Load scripts.
-			Reinstall::Script::load(*this,node,scripts);
+			IsoWriter::Script::load(*this,node,scripts);
 
 			// Enable allow reboot on success dialog.
 			success->set(Dialog::Reboot);
@@ -266,7 +266,7 @@
 				return true;
 			}
 
-			return Reinstall::Action::getProperty(key,value);
+			return IsoWriter::Action::getProperty(key,value);
 		}
 
 		void activate() override {
@@ -314,7 +314,7 @@
 	// Udjat::Properties::Parser interface.
 	bool Grub2::Module::parse(const Udjat::Properties &node) {
 		// Logger::String{"Building action '",node.attribute("name").as_string(),"' from '",node.path(),"'"}.info("isowriter");
-		Reinstall::Application::getInstance().push_back(node,make_shared<Grub2::Module::Action>(node));
+		IsoWriter::Application::getInstance().push_back(node,make_shared<Grub2::Module::Action>(node));
 		return true;
 	}
 

@@ -29,7 +29,7 @@
  #include <functional>
  #include <vector>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API Repository : public std::string {
 	private:
@@ -87,7 +87,7 @@
 //  #include <reinstall/tools/datasource.h>
 //  #include <reinstall/tools/kernelparameter.h>
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	class SLPClient;
 

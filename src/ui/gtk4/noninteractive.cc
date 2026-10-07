@@ -78,7 +78,7 @@
 
 	ThreadPool::getInstance().push([this](){
 		
-		Reinstall::Application::activate();
+		IsoWriter::Application::activate();
 
 		// Close progress popup.
 		Glib::signal_idle().connect_once([](){
@@ -89,9 +89,9 @@
 
  }
 
- std::shared_ptr<Reinstall::Group> NonInteractiveWindow::group_factory(const Udjat::Properties &node) {
+ std::shared_ptr<IsoWriter::Group> NonInteractiveWindow::group_factory(const Udjat::Properties &node) {
 
-	class Group : public Reinstall::Group {
+	class Group : public IsoWriter::Group {
 	private:
 		NonInteractiveWindow &hwnd;
 
@@ -101,9 +101,9 @@
 			// Initialize group with the XML node.
 		}
 
-		void push_back(const Udjat::Properties &node, shared_ptr<Reinstall::Action> action) override {
+		void push_back(const Udjat::Properties &node, shared_ptr<IsoWriter::Action> action) override {
 
-			if(!Reinstall::Action::is_default(node)) {
+			if(!IsoWriter::Action::is_default(node)) {
 				return;
 			}
 

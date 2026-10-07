@@ -66,7 +66,7 @@
 	Gtk::LinkButton help_button;
 
  public:
-	Item(const Udjat::Properties &node, std::shared_ptr<Reinstall::Action> action) 
+	Item(const Udjat::Properties &node, std::shared_ptr<IsoWriter::Action> action) 
 		: label{node,"action-title","title"}, body{node,"action-subtitle","sub-title"} {
 
 		set_hexpand(true);
@@ -250,11 +250,11 @@
 	set_use_underline(true);
   }
 
-  std::shared_ptr<Reinstall::Group> InteractiveWindow::group_factory(const Udjat::Properties &node) {
+  std::shared_ptr<IsoWriter::Group> InteractiveWindow::group_factory(const Udjat::Properties &node) {
 	
 	static std::shared_ptr<Item> active_item;	///< @brief The selected item.
 	
-	class Group : public Gtk::Grid, public Reinstall::Group {
+	class Group : public Gtk::Grid, public IsoWriter::Group {
 	private:
 		Label title{"group-title",""};						///< @brief The group title.
 		Label sub_title{"group-subtitle",""};				///< @brief The group sub-title.
@@ -316,7 +316,7 @@
 
 		}
 
-		void push_back(const Udjat::Properties &node, std::shared_ptr<Reinstall::Action> action) override {
+		void push_back(const Udjat::Properties &node, std::shared_ptr<IsoWriter::Action> action) override {
 
 			sem_t semaphore;
 			sem_init(&semaphore,0,0);
@@ -380,7 +380,7 @@
 	return std::shared_ptr<Group>{group};
   }
 
-  void InteractiveWindow::select(std::shared_ptr<Reinstall::Action> action) {
+  void InteractiveWindow::select(std::shared_ptr<IsoWriter::Action> action) {
 
 	apply.set_sensitive(action.get() != nullptr);
 	Application::select(action);
@@ -469,7 +469,7 @@
 
 	ThreadPool::getInstance().push([this,status](){
 		
-		Reinstall::Application::activate();
+		IsoWriter::Application::activate();
 
 		// Close progress popup.
 		Glib::signal_idle().connect_once([status](){

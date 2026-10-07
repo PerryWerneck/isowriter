@@ -29,7 +29,7 @@
  #include <memory>
  #include <vector>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API KernelParameter {
 	private:

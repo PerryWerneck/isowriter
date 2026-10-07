@@ -29,7 +29,7 @@
  #include <reinstall/dialog.h>
  #include <udjat/tools/string.h>
  
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API Action : public Udjat::String {
 	private:

@@ -40,21 +40,21 @@
  using namespace Udjat;
  using namespace std; 
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	int Application::run_tui() {
 
-		class TextApplication : public Reinstall::Application {
+		class TextApplication : public IsoWriter::Application {
 		private:
 
-			class Group : public Reinstall::Group {
+			class Group : public IsoWriter::Group {
 			private:
 				std::string title;
 				std::vector<std::shared_ptr<Action>> actions;
 
 			public:
 				Group(const Udjat::Properties &props) 
-					: Reinstall::Group{props},title{props["title"].c_str()} {
+					: IsoWriter::Group{props},title{props["title"].c_str()} {
 				}
 
 				const char *label() const noexcept override {

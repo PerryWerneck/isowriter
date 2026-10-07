@@ -31,12 +31,12 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	Builder::Builder(const Udjat::Properties &props) : Reinstall::Action{props["name"].as_quark()} {
+	Builder::Builder(const Udjat::Properties &props) : IsoWriter::Action{props["name"].as_quark()} {
 	}
 
-	bool Builder::push_back(std::shared_ptr<Reinstall::DataSource> source) {
+	bool Builder::push_back(std::shared_ptr<IsoWriter::DataSource> source) {
 		
 		{
 			auto k = dynamic_pointer_cast<Kernel>(source);
@@ -101,9 +101,9 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
-// 	Builder::Builder(const Udjat::Properties &node) : Reinstall::Action{node}, output{Dialog::Factory("select-device",node)} {
+// 	Builder::Builder(const Udjat::Properties &node) : IsoWriter::Action{node}, output{Dialog::Factory("select-device",node)} {
 
 // 		{
 // 			// Search for EFI Boot definitions
@@ -146,20 +146,20 @@
 // 		}
 
 // 		// Load sources.
-// 		Reinstall::DataSource::load(node,sources);
+// 		IsoWriter::DataSource::load(node,sources);
 
 // 		// Load templates
-// 		Reinstall::Template::load(*this,node,templates);
+// 		IsoWriter::Template::load(*this,node,templates);
 
 // 		// Load kernel parameters.
-// 		Reinstall::KernelParameter::load(node,kparms);
+// 		IsoWriter::KernelParameter::load(node,kparms);
 
 // 	}
 
 // 	Builder::~Builder() {
 // 	}
 
-// 	std::shared_ptr<Reinstall::Template> Builder::tmplt(const char *filename) {
+// 	std::shared_ptr<IsoWriter::Template> Builder::tmplt(const char *filename) {
 
 // 		for(auto &tmplt : templates) {
 // 			if(*tmplt == filename) {
@@ -167,7 +167,7 @@
 // 			}
 // 		}
 
-// 		return std::shared_ptr<Reinstall::Template>();
+// 		return std::shared_ptr<IsoWriter::Template>();
 // 	}
 
 // 	void Builder::push_back(std::list<std::shared_ptr<DataSource>> &files, std::shared_ptr<DataSource> value) {
@@ -175,7 +175,7 @@
 // 		class TemplateSource : public DataSource {
 // 		private:
 // 			const Udjat::Abstract::Object *parent;	///< @brief Parent object (for properties).
-// 			std::shared_ptr<Reinstall::Template> tmplt;
+// 			std::shared_ptr<IsoWriter::Template> tmplt;
 
 // 			std::string tempfile;	///< @brief The temporary file with template applyed.
 
@@ -187,7 +187,7 @@
 // 		public:
 
 // #ifdef BUILD_LEGACY
-// 			TemplateSource(const Udjat::Abstract::Object &p, std::shared_ptr<Reinstall::Template> t, std::shared_ptr<DataSource> source)
+// 			TemplateSource(const Udjat::Abstract::Object &p, std::shared_ptr<IsoWriter::Template> t, std::shared_ptr<DataSource> source)
 // 				: DataSource{*source},parent{&p},tmplt{t} {
 
 // 				path.local = source->local();
@@ -195,7 +195,7 @@
 
 // 			}
 // #else
-// 			TemplateSource(const Udjat::Abstract::Object &p, std::shared_ptr<Reinstall::Template> t, std::shared_ptr<DataSource> source) 
+// 			TemplateSource(const Udjat::Abstract::Object &p, std::shared_ptr<IsoWriter::Template> t, std::shared_ptr<DataSource> source) 
 // 				: DataSource{*source} {
 
 // 				parent = &p;
@@ -325,7 +325,7 @@
 // 			return true;
 // 		}
 
-// 		return Reinstall::Action::getProperty(key,value);
+// 		return IsoWriter::Action::getProperty(key,value);
 
 // 	}
 

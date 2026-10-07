@@ -27,9 +27,9 @@
  #include <reinstall/tools/datasource.h>
  #include <vector>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	class UDJAT_API Template : public std::string, public Reinstall::DataSource::Item, protected Udjat::Template {
+	class UDJAT_API Template : public std::string, public IsoWriter::DataSource::Item, protected Udjat::Template {
 	public:
 		
 		/// @brief Build a template from properties.
@@ -56,7 +56,7 @@
 //  #include <udjat/tools/object.h>
 //  #include <vector>
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	class UDJAT_API Template : public Udjat::NamedObject {
 // 	public:

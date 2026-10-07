@@ -51,7 +51,7 @@
  using namespace std;
  using namespace Udjat;
 
- TopLevel::TopLevel() : Gtk::ApplicationWindow(), Reinstall::Writer{"toplevel"} {
+ TopLevel::TopLevel() : Gtk::ApplicationWindow(), IsoWriter::Writer{"toplevel"} {
 
 	// Get rid of the gtk warnings.
 	if(!freopen("/dev/null","w",stderr)) {

@@ -26,7 +26,7 @@
  using namespace std;
  using namespace Udjat;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	EFIBootImage::EFIBootImage(const Udjat::Properties &props) : NamedObject{props} {
 

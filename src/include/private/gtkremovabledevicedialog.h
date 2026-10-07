@@ -33,15 +33,15 @@
  #define USE_DROPDOWN 1
 
  #ifdef USE_MESSAGE_DIALOG
- class UDJAT_PRIVATE GtkRemovableDeviceDialog : public Gtk::MessageDialog, public Reinstall::RemovableDeviceDialog {
+ class UDJAT_PRIVATE GtkRemovableDeviceDialog : public Gtk::MessageDialog, public IsoWriter::RemovableDeviceDialog {
  private:
  #else
- class GtkRemovableDeviceDialog : public Gtk::Window, public Reinstall::RemovableDeviceDialog {
+ class GtkRemovableDeviceDialog : public Gtk::Window, public IsoWriter::RemovableDeviceDialog {
  private:
  #endif // USE_MESSAGE_DIALOG
 
  #ifdef USE_DROPDOWN
-	class DeviceHolder : public Glib::Object, public Reinstall::RemovableDeviceDialog::DeviceHolder {
+	class DeviceHolder : public Glib::Object, public IsoWriter::RemovableDeviceDialog::DeviceHolder {
 	public:
 
 		static Glib::RefPtr<DeviceHolder> create(Type type, const char *devname, const char *descr) {
@@ -51,7 +51,7 @@
 	private:
 
 		DeviceHolder(Type type, const char *name, const char *descr) :
-			Reinstall::RemovableDeviceDialog::DeviceHolder{type, name, descr} {
+			IsoWriter::RemovableDeviceDialog::DeviceHolder{type, name, descr} {
 		}
 
 	};
@@ -86,7 +86,7 @@
 	void device_selected(Glib::RefPtr<DeviceHolder> device);
 
  public:
-	GtkRemovableDeviceDialog(Reinstall::Writer &writer, const Reinstall::Dialog &dialog, bool allow_output_to_file = true);
+	GtkRemovableDeviceDialog(IsoWriter::Writer &writer, const IsoWriter::Dialog &dialog, bool allow_output_to_file = true);
 
 	/// @brief Get selected device description.
 	const char *description() const override;

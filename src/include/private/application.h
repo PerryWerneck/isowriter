@@ -29,7 +29,7 @@
  #include <udjat/tools/string.h>
  #include <udjat/ui/progress.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class Group;
 	class Action;

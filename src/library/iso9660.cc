@@ -479,7 +479,7 @@
 
 	}
 
-	void Image::push_back(std::shared_ptr<Reinstall::DataSource::Item> source) {
+	void Image::push_back(std::shared_ptr<IsoWriter::DataSource::Item> source) {
 
 		if(!source) {
 			throw invalid_argument(_("No source to map into the ISO image"));
@@ -526,9 +526,9 @@
 		try {
 
 			uint64_t image_size = src->get_size(src);
-			auto writer = Reinstall::Writer::get_instance(image_size);
+			auto writer = IsoWriter::Writer::get_instance(image_size);
 
-			auto progress = Reinstall::Progress::Factory();
+			auto progress = IsoWriter::Progress::Factory();
 			progress->url(writer->c_str());
 
 			uint64_t current = 0;

@@ -28,7 +28,7 @@
 
  using namespace Udjat;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	Action::Action(const Udjat::Properties &props) : String{props["name"].c_str()} {
 
@@ -93,7 +93,7 @@
 //  using namespace Udjat;
 //  using namespace std;
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	const char * Action::presets[2] = {nullptr,nullptr};
 

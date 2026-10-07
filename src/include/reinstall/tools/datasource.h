@@ -28,7 +28,7 @@
  #include <string>
  #include <vector>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class Repository;
 
@@ -113,7 +113,7 @@
 //  #include <memory>
 //  #include <vector>
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	class Repository;
 // 	class Template;
@@ -259,15 +259,15 @@
 //  namespace std {
 
 // 	template <>
-// 	struct hash<Reinstall::DataSource> {
-// 		inline size_t operator()(const Reinstall::DataSource &obj) const {
+// 	struct hash<IsoWriter::DataSource> {
+// 		inline size_t operator()(const IsoWriter::DataSource &obj) const {
 // 			return std::hash<const char *>{}(obj.name());
 // 		}
 // 	};
 
 // 	template <>
-// 	struct equal_to<Reinstall::DataSource> {
-// 		inline int operator()(const Reinstall::DataSource &lhs,const Reinstall::DataSource &rhs) const {
+// 	struct equal_to<IsoWriter::DataSource> {
+// 		inline int operator()(const IsoWriter::DataSource &lhs,const IsoWriter::DataSource &rhs) const {
 // 			return strcasecmp(lhs.name(),rhs.name()) == 0;
 // 		}
 // 	};

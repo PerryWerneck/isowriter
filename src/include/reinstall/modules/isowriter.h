@@ -28,7 +28,7 @@
  #include <memory>
  #include <udjat/tools/properties.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	namespace IsoWriter {
 

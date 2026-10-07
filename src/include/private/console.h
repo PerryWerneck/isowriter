@@ -31,9 +31,9 @@
  #include <udjat/ui/status.h>
  #include <reinstall/tools/writer.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
-	class UDJAT_API Console : public Reinstall::Application, private Udjat::Dialog::Status, private Reinstall::Writer {
+	class UDJAT_API Console : public IsoWriter::Application, private Udjat::Dialog::Status, private IsoWriter::Writer {
 	private:
 		class Group;
 
@@ -42,7 +42,7 @@
 	protected:
 
 		/// @brief Build a new group.
-		std::shared_ptr<Reinstall::Group> group_factory(const Udjat::Properties &node) override;
+		std::shared_ptr<IsoWriter::Group> group_factory(const Udjat::Properties &node) override;
 
 		/// @brief Notify the user that the operation has failed.
 		/// @param e The exception that was thrown.
@@ -57,9 +57,9 @@
 
 		int run(int argc, char *argv[]);
 
-		std::shared_ptr<Reinstall::Dialog> DialogFactory(const char *name, const Udjat::Properties &node, const char *message, const Dialog::Option option = Dialog::None) override;	
+		std::shared_ptr<IsoWriter::Dialog> DialogFactory(const char *name, const Udjat::Properties &node, const char *message, const Dialog::Option option = Dialog::None) override;	
 
-		bool open(const Reinstall::Dialog &settings) override;
+		bool open(const IsoWriter::Dialog &settings) override;
 
 	};
  }

@@ -46,7 +46,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
  	static int getuid(const Properties &node) {
 
@@ -111,7 +111,7 @@
  	}
 
 	Script::Script(const Udjat::Abstract::Object &parent, const Udjat::Properties &node)
-		: Reinstall::FileSource{node,false}, rtime{(Script::RunTime) node.get("type","post").select("pre","post",nullptr)},
+		: IsoWriter::FileSource{node,false}, rtime{(Script::RunTime) node.get("type","post").select("pre","post",nullptr)},
 		marker{node.get("marker",Config::Value<String>("marker","$").c_str())[0]},
 		uid{getuid(node)}, gid{getgid(node)}, cmdline{String{node,"cmdline"}.as_quark()} {
 

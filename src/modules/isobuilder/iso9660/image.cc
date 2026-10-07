@@ -79,7 +79,7 @@
 
 	};
 
-	Image::Image(Reinstall::Builder *builder, const std::shared_ptr<Settings> s) : Reinstall::Abstract::Image{builder}, settings{s} {
+	Image::Image(IsoWriter::Builder *builder, const std::shared_ptr<Settings> s) : IsoWriter::Abstract::Image{builder}, settings{s} {
 
 		IsoBuilderSingleTon::getInstance();
 
@@ -186,7 +186,7 @@
 			if(settings->application_id && *settings->application_id) {
 				iso_image_set_application_id(image,settings->application_id);
 			} else {
-				iso_image_set_application_id(image,Config::Value<string>("iso9660","application-id",Reinstall::Abstract::Image::application_id()).c_str());;
+				iso_image_set_application_id(image,Config::Value<string>("iso9660","application-id",IsoWriter::Abstract::Image::application_id()).c_str());;
 			}
 		}
 
@@ -449,10 +449,10 @@
 
 			unsigned long long total = burn_src->get_size(burn_src);
 
-			auto &writer = Reinstall::Writer::getInstance();
+			auto &writer = IsoWriter::Writer::getInstance();
 			writer.size(total);
 
-			writer.open(Reinstall::Dialog());
+			writer.open(IsoWriter::Dialog());
 
 			auto progress = Udjat::Dialog::Progress::getInstance();
 

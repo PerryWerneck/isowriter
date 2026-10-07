@@ -45,7 +45,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	SLPClient::SLPClient(const Udjat::Properties &node) 
 		: service_type{node["slp-service-type"].as_quark()},

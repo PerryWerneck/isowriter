@@ -49,7 +49,7 @@
  }
  #endif // UDJAT 1.2.1
 
- class UDJAT_PRIVATE MainWindow : public Gtk::ApplicationWindow, private Reinstall::Group::Controller, private Reinstall::GtkWriter {
+ class UDJAT_PRIVATE MainWindow : public Gtk::ApplicationWindow, private IsoWriter::Group::Controller, private IsoWriter::GtkWriter {
  private:
 	struct Layout {
 		SideBar sidebar;
@@ -94,7 +94,7 @@
 	Item *selected = nullptr;
 	std::list<std::shared_ptr<Item>> itens;
 
-	class Group : public Gtk::Grid, public Reinstall::Group {
+	class Group : public Gtk::Grid, public IsoWriter::Group {
 	private:
 		Gtk::Label title;
 		Gtk::Label sub_title;
@@ -119,7 +119,7 @@
 	MainWindow(Glib::RefPtr<::Gtk::Application> app);
 	virtual ~MainWindow();
 
-	std::shared_ptr<Reinstall::Group> get(const Udjat::Properties &node) override;
+	std::shared_ptr<IsoWriter::Group> get(const Udjat::Properties &node) override;
 
  };
 

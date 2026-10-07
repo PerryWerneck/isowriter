@@ -31,7 +31,7 @@
 
  namespace FatFS {
 
-	class UDJAT_API Image : public Reinstall::Image {
+	class UDJAT_API Image : public IsoWriter::Image {
 	public:
 		struct Settings {
 			MKFS_PARM parms = { FM_FAT32, 0, 0, 0, 0};	///< Format parameter structure used for f_mkfs()
@@ -51,13 +51,13 @@
 		/// @param path The path for file inside fat image.
 		void push_back(const Udjat::URL &url, const char *path);
 
-		inline void load(std::vector<Reinstall::DataSource::Item> &itens) {
-			Reinstall::Image::load(itens);
+		inline void load(std::vector<IsoWriter::DataSource::Item> &itens) {
+			IsoWriter::Image::load(itens);
 		}
 
 
 	protected:
-		void load(Reinstall::DataSource::Item &item) override;
+		void load(IsoWriter::DataSource::Item &item) override;
 
 	private:
 
@@ -84,7 +84,7 @@
 
 //  namespace FatFS {
 
-// 	class UDJAT_API Image : public Reinstall::Abstract::Image {
+// 	class UDJAT_API Image : public IsoWriter::Abstract::Image {
 // 	public:
 
 // 		/// @brief ISO9660 image definitions.
@@ -104,7 +104,7 @@
 
 // 		};
 
-// 		Image(Reinstall::Builder *builder, const std::shared_ptr<Settings> s);
+// 		Image(IsoWriter::Builder *builder, const std::shared_ptr<Settings> s);
 // 		virtual ~Image();
 
 // 		void pre(Udjat::Abstract::Object &object);
@@ -113,10 +113,10 @@
 
 // 		void write() override;
 
-// 		void append(std::shared_ptr<Reinstall::DataSource> source) override;
+// 		void append(std::shared_ptr<IsoWriter::DataSource> source) override;
 
-// 		inline void append(std::list<std::shared_ptr<Reinstall::DataSource>> &sources) {
-// 			Reinstall::Abstract::Image::append(sources);
+// 		inline void append(std::list<std::shared_ptr<IsoWriter::DataSource>> &sources) {
+// 			IsoWriter::Abstract::Image::append(sources);
 // 		}
 
 // 	protected:

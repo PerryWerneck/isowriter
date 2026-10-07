@@ -43,21 +43,21 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	/// @brief Base class for actions.
-	class UDJAT_PRIVATE IsoBuilder::Module::Action : public Reinstall::Builder {
+	class UDJAT_PRIVATE IsoBuilder::Module::Action : public IsoWriter::Builder {
 	protected:
 		virtual void build(list<std::shared_ptr<DataSource>> &files) = 0;
 
 	public:
 		Action(const Udjat::Properties &node)
-			: Reinstall::Builder{node} {
+			: IsoWriter::Builder{node} {
 
 		}
 
 		inline const char *name() const noexcept {
-			return Reinstall::Action::name();
+			return IsoWriter::Action::name();
 		}
 
 		void activate() override {
@@ -149,13 +149,13 @@
 
 	};
 
-	Reinstall::IsoBuilder::Module::Module(const char *name, const char *tagname) : Udjat::Module(name,"Build customized installation image."), Udjat::Properties::Parser{tagname} {
+	IsoWriter::IsoBuilder::Module::Module(const char *name, const char *tagname) : Udjat::Module(name,"Build customized installation image."), Udjat::Properties::Parser{tagname} {
 	}
 
-	Reinstall::IsoBuilder::Module::~Module() {
+	IsoWriter::IsoBuilder::Module::~Module() {
 	}
 
-	bool Reinstall::IsoBuilder::Module::parse(const Udjat::Properties &props) {
+	bool IsoWriter::IsoBuilder::Module::parse(const Udjat::Properties &props) {
 		try {
 
 			auto attr = props.get(
@@ -171,7 +171,7 @@
 
 #ifdef HAVE_LIBISOFS
 			if(strcasecmp(attr.c_str(),"iso9660") == 0) {
-				Reinstall::Application::getInstance().push_back(
+				IsoWriter::Application::getInstance().push_back(
 					props,
 					make_shared<Iso9660Builder>(props)
 				);
@@ -180,7 +180,7 @@
 #endif // HAVE_LIBISOFS
 
 			if(strcasecmp(attr.c_str(),"fat") == 0 || strcasecmp(attr.c_str(),"fat32") == 0) {
-				Reinstall::Application::getInstance().push_back(
+				IsoWriter::Application::getInstance().push_back(
 					props,
 					make_shared<FatBuilder>(props)
 				);
@@ -199,7 +199,7 @@
 
 	}
 
-	Udjat::Module * Reinstall::IsoBuilder::Module::Factory(const char *name, const char *tagname) {
+	Udjat::Module * IsoWriter::IsoBuilder::Module::Factory(const char *name, const char *tagname) {
 		return new Module(name,tagname);
 	}
 

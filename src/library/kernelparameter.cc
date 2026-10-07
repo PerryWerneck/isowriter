@@ -41,7 +41,7 @@
  using namespace std;
  using namespace Udjat;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_PRIVATE KParm : public KernelParameter {
 	private:

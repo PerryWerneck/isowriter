@@ -70,7 +70,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	void Writer::set_output(const char *path) {
 		selected = path;

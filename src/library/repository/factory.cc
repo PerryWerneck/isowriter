@@ -41,7 +41,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	std::vector<Repository::Preset> Repository::presets;
 

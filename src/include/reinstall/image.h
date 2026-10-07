@@ -26,7 +26,7 @@
  #include <udjat/tools/properties.h>
  #include <reinstall/tools/datasource.h>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API Image {
 	public:
@@ -54,7 +54,7 @@
 //  #include <udjat/ui/progress.h>
 //  #include <list>
 
-//  namespace Reinstall {
+//  namespace IsoWriter {
 
 // 	class Builder;
 
@@ -64,17 +64,17 @@
 // 		/// @brief Abstract disk image.
 // 		class UDJAT_API Image {
 // 		protected:
-// 			Reinstall::Builder *builder;
+// 			IsoWriter::Builder *builder;
 
 // 			/// @brief EFI boot partition image file.
 // 			std::string efibootpart;
 
 // #ifdef BUILD_LEGACY
-// 			inline Image(Reinstall::Builder *b) {
+// 			inline Image(IsoWriter::Builder *b) {
 // 				builder = b;
 // 			}
 // #else
-// 			inline Image(Reinstall::Builder *b) : builder{b} {
+// 			inline Image(IsoWriter::Builder *b) : builder{b} {
 // 			}
 // #endif // BUILD_LEGACY
 

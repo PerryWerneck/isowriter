@@ -27,7 +27,7 @@
  #include <udjat/tools/string.h>
  #include <memory>
 
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class Action;
 

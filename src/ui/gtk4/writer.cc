@@ -38,7 +38,7 @@
  using namespace Udjat;
  using namespace std;
 
- bool TopLevel::open(const Reinstall::Dialog &settings) {
+ bool TopLevel::open(const IsoWriter::Dialog &settings) {
 
 	// Check for pre-selected output.
 	if(Writer::open(settings)) {

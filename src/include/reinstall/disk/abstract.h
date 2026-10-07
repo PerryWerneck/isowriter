@@ -24,7 +24,7 @@
  #pragma once
  #include <udjat/defs.h>
  
- namespace Reinstall {
+ namespace IsoWriter {
 
 	class UDJAT_API Disk {
 	public:
