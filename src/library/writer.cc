@@ -45,7 +45,7 @@
 	std::shared_ptr<Writer> Writer::get_instance(unsigned long long length) {
 
 		if(!devname.empty()) {
-			return make_shared<Writer>(devname.c_str(), length);
+			return make_shared<Writer>(devname.c_str(), devname, length);
 		}
 
 		throw runtime_error("Device detection is unavailable");
@@ -56,22 +56,26 @@
 		Logger::String{"Default output device set to '",devname.c_str(),"'"}.trace();
 	}
 
-	Writer::Writer(const char *devname, unsigned long long length) : std::string{devname} {
+	Writer::Writer(const char *devname, const std::string &url, unsigned long long length) 
+		: Writer{open(devname,O_WRONLY|O_CREAT,0664),url,length} {
+	}
 
-		fd = open(devname,O_WRONLY|O_CREAT,0664);
+	Writer::Writer(int d, const std::string &url, unsigned long long length) : std::string{url}, fd{d} {
+
 		if(fd == -1) {
  			throw system_error(errno, system_category(), Logger::Message({_("Error opening device '{}'"),devname}));
 		}
 
- 		struct stat sb;
+		struct stat sb;
 		if (fstat(fd, &sb) == -1) {
  			throw system_error(errno, system_category(), Logger::Message({_("Error getting stat of '{}'"),devname}));
     	}
 
 		if (S_ISREG(sb.st_mode)) {
+
 			debug(devname," is a regular file");
 
-			if(fallocate(fd,0,0,length)) {
+			if(length && fallocate(fd,0,0,length)) {
 			 	system_error err{errno, system_category(), Logger::Message({_("Error allocating space for '{}'"),devname})};
 				::close(fd);
 				fd = -1;

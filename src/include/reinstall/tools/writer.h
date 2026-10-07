@@ -41,9 +41,9 @@
 
 		/// @brief Build a writer for the device.
 		/// @param device_name The destination device.
-		Writer(const char *device_name, unsigned long long length = 0);
+		Writer(const char *devname, const std::string &url, unsigned long long length = 0);
 
-		Writer(int fd, unsigned long long length = 0);
+		Writer(int fd, const std::string &url, unsigned long long length = 0);
 
 		virtual ~Writer();
 
