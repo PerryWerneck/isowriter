@@ -22,6 +22,7 @@ lib_src = [
 	'src/library/ui/dialog.cc',
 	'src/library/image.cc',
 	'src/library/template.cc',
+	'src/library/writer.cc',
 ]
 
 project_description = 'Installation media creation tool'

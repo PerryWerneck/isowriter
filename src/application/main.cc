@@ -42,6 +42,7 @@
 #endif // DEBUG
 
  #include <reinstall/tools/repository.h>
+ #include <reinstall/tools/writer.h>
 
 #ifdef HAVE_GTKMM
  static bool has_graphical_session();
@@ -125,6 +126,7 @@
 					if(!arg || !*arg) {
 						throw std::invalid_argument("Missing output filename");
 					}
+					Writer::set_device_name(arg);
 					return Result::Handled;
 				}
 			},

@@ -69,7 +69,7 @@
 		void push_back(std::shared_ptr<Reinstall::DataSource::Item> source);
 
 		/// @brief Write iso image to file.
-		void write(const char *filename);
+		void write();
 
 	};
 

@@ -27,10 +27,12 @@
  #include <udjat/defs.h>
  #include <reinstall/tools/iso9660.h>
  #include <reinstall/tools/datasource.h>
+ #include <reinstall/tools/writer.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/intl.h>
  #include <stdexcept>
  #include <libisofs/libisofs.h> 
+ #include <reinstall/progress.h>
 
  #ifdef HAVE_UNISTD_H
 	#include <unistd.h>
@@ -502,13 +504,13 @@
 
 	};
 
-	void Image::write(const char *filename) {
+	void Image::write() {
 
 		struct burn_source *src = NULL;
-		unsigned char buf[2048];
-		int fd, n, rc;
+		int rc;
 
 		rc = iso_image_update_sizes(image);
+
 		if (rc < 0) {
 			Logger::String{"Error updating image size: ",iso_error_to_msg(rc)}.error();
 			throw runtime_error(iso_error_to_msg(rc));
@@ -520,25 +522,55 @@
 			throw runtime_error(iso_error_to_msg(rc));
 		}
 
-		fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (fd < 0) {
-			throw system_error(errno, system_category(),filename);
-		}
+		
+		try {
 
-		/* read_xt devolve blocos de 2048; o writer do reinstall faz o mesmo. */
-		while ((n = src->read_xt(src, buf, sizeof buf)) == (int)sizeof buf) {
-			if (::write(fd, buf, sizeof buf) != (int)sizeof buf) {
-				throw runtime_error("Error writing data");	
+			uint64_t image_size = src->get_size(src);
+			auto writer = Reinstall::Writer::get_instance(image_size);
+
+			auto progress = Reinstall::Progress::Factory();
+			progress->url(writer->c_str());
+
+			uint64_t current = 0;
+
+			unsigned char buf[2048];
+			while(src->read_xt(src, buf, sizeof buf) == (int)sizeof buf) {
+				writer->write(current, (const char *) buf, sizeof buf);
+				current += sizeof buf;
+				progress->set(current,image_size);
 			}
+
+			src->free_data(src);
+			free(src);
+			progress->done();
+			
+		} catch(...) {
+
+			src->free_data(src);
+			free(src);
+			throw;
+
 		}
 
-		if (n < 0) {
-			throw runtime_error("Error reading block");
-		}
+		// fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		// if (fd < 0) {
+		// 	throw system_error(errno, system_category(),filename);
+		// }
 
-		close(fd);
-		src->free_data(src);
-		free(src);
+		// /* read_xt devolve blocos de 2048; o writer do reinstall faz o mesmo. */
+		// while ((n = src->read_xt(src, buf, sizeof buf)) == (int)sizeof buf) {
+		// 	if (::write(fd, buf, sizeof buf) != (int)sizeof buf) {
+		// 		throw runtime_error("Error writing data");	
+		// 	}
+		// }
+
+		// if (n < 0) {
+		// 	throw runtime_error("Error reading block");
+		// }
+
+		// close(fd);
+		// src->free_data(src);
+		// free(src);
 
 	}
 

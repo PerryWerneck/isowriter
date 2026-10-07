@@ -48,6 +48,7 @@
  #include <reinstall/tools/repository.h>
  #include <reinstall/progress.h>
  #include <reinstall/tools/template.h>
+ #include <reinstall/tools/writer.h>
 
  using namespace Udjat;
  using namespace Reinstall;
@@ -179,7 +180,9 @@
 				image.push_back(make_shared<Template>("grub2","/EFI/BOOT/grub.cfg"));
 
 				stream << "Writing modified image" << endl;
-				image.write("/tmp/test.iso");
+
+				Writer::set_device_name("/tmp/test.iso");
+				image.write();
 
 				return "ISOEditor test passed";
 			}
