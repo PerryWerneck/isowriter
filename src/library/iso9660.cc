@@ -60,7 +60,7 @@
 		/// iso_image_get_system_area() returns the options that will be
 		/// written, which are still 0 until we set them. The report is the
 		/// mask xorriso -boot_image any replay applies.
-		static SystemAreaPlan read_system_area_plan(IsoImage *image) {
+		SystemAreaPlan read_system_area_plan(IsoImage *image) {
 
 			SystemAreaPlan plan;
 			char **lines = NULL;
@@ -112,7 +112,7 @@
 
 		/// @brief Re-arm boot-info-table patching on file-backed El Torito images.
 		/// Patching an appended partition (no IsoFile) returns ISO_ISOLINUX_CANT_PATCH.
-		static void replay_boot_images(IsoImage *image, int sa_options) {
+		void replay_boot_images(IsoImage *image, int sa_options) {
 
 			int count = 0;
 			ElToritoBootImage **boots = NULL;
@@ -159,7 +159,7 @@
 
 		namespace fs = std::filesystem;
 
-		static void iso_check(int rc, const char *action, const char *path) {
+		void iso_check(int rc, const char *action, const char *path) {
 			if(rc < 0) {
 				Logger::String{"Error ",action," '",path,"': ",iso_error_to_msg(rc)}.error();
 				throw runtime_error(iso_error_to_msg(rc));
@@ -168,7 +168,7 @@
 
 		/// @brief Absolute ISO path. "." and repeated slashes are collapsed.
 		/// ".." is rejected so the path cannot leave the image root.
-		static string normalize_iso_path(const char *path) {
+		string normalize_iso_path(const char *path) {
 
 			if(!path || !*path) {
 				throw runtime_error(_("Missing ISO path for -map"));
@@ -208,7 +208,7 @@
 			return out.empty() ? string{"/"} : out;
 		}
 
-		static void split_iso_leaf(const string &path, string &parent, string &leaf) {
+		void split_iso_leaf(const string &path, string &parent, string &leaf) {
 			auto slash = path.rfind('/');
 			if(slash == string::npos || slash == 0) {
 				parent = "/";
@@ -221,7 +221,7 @@
 
 		/// @brief Create missing parents. Attributes are copied from the
 		/// parent, which is what libisofs does for implicit directories.
-		static IsoDir * ensure_iso_dir(IsoImage *image, const string &path) {
+		IsoDir * ensure_iso_dir(IsoImage *image, const string &path) {
 
 			IsoDir *dir = iso_image_get_root(image);
 			if(path.empty() || path == "/") {
@@ -267,11 +267,11 @@
 			return dir;
 		}
 
-		static void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path);
+		void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path);
 
 		/// @brief Insert the children of a disk directory. -map of a directory
 		/// inserts the whole tree; two directories are merged.
-		static void map_children(IsoImage *image, IsoDir *parent, const char *disk_dir, const string &iso_dir) {
+		void map_children(IsoImage *image, IsoDir *parent, const char *disk_dir, const string &iso_dir) {
 
 			for(const auto &entry : fs::directory_iterator(disk_dir)) {
 				string name = entry.path().filename().string();
@@ -285,7 +285,7 @@
 		/// A directory is not replaced by a file. Anything else is removed
 		/// and the disk object is inserted in its place. Disk symlinks are
 		/// not followed (-follow off).
-		static void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path) {
+		void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path) {
 
 			const bool disk_dir = fs::is_directory(fs::symlink_status(disk_path));
 
@@ -319,7 +319,7 @@
 
 		}
 
-		static void map_disk_path(IsoImage *image, const char *disk_path, const string &iso_path) {
+		void map_disk_path(IsoImage *image, const char *disk_path, const string &iso_path) {
 
 			if(iso_path == "/") {
 				if(!fs::is_directory(fs::symlink_status(disk_path))) {
