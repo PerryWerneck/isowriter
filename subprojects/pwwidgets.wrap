@@ -4,4 +4,4 @@ revision = v1
 depth = 1
 
 [provide]
-pwwidgets = static_library
+pwwidgets = pwwidgets_dep
