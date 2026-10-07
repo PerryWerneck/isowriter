@@ -25,7 +25,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/url.h>
  #include <reinstall/tools/repository.h>
- #include <reinstall/progress.h>
+ #include <reinstall/dialog.h>
  #include <udjat/tools/intl.h>
  #include <stdexcept>
  #include <udjat/tools/logger.h>

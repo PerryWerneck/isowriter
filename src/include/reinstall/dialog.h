@@ -27,11 +27,18 @@
  #include <memory>
  #include <functional>
  #include <udjat/tools/properties.h>
+ #include <udjat/ui/progress.h>
  #include <cstdarg>
  #include <vector>
  #include <cstdint>
 
  namespace Reinstall {
+
+	namespace Progress {
+
+		UDJAT_API std::shared_ptr<Udjat::Dialog::Progress> Factory();
+
+	}
 
 	class UDJAT_API Dialog : public std::string {
 	public:

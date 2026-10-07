@@ -34,7 +34,7 @@
  #include <reinstall/group.h>
  #include <udjat/module/http.h>
  #include <udjat/ui/console/progress.h>
- #include <reinstall/progress.h>
+ #include <reinstall/dialog.h>
 
  using namespace Udjat;
  using namespace std;
@@ -201,11 +201,19 @@
 		throw std::logic_error("Non-interactive mode is not implemented");
 	}
 
-	std::shared_ptr<Progress> Application::ProgressDialogFactory() {
-		return make_shared<Progress>();
+	std::shared_ptr<Udjat::Dialog::Progress> Application::ProgressDialogFactory() {
+
+#ifdef DEBUG
+
+		return make_shared<Udjat::Console::Progress>();
+
+#else
+		return make_shared<Udjat::Dialog::Progress>();
+
+#endif // DEBUG
 	}
 
-	std::shared_ptr<Progress> Progress::Factory() {
+	std::shared_ptr<Udjat::Dialog::Progress> Progress::Factory() {
 		return Application::get_instance().ProgressDialogFactory();
 	}
 

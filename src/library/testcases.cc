@@ -46,7 +46,7 @@
  #include <reinstall/tools/builder.h>
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/repository.h>
- #include <reinstall/progress.h>
+ #include <reinstall/dialog.h>
  #include <reinstall/tools/template.h>
  #include <reinstall/tools/writer.h>
 

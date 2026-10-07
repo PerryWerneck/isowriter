@@ -43,6 +43,8 @@
 		/// @param device_name The destination device.
 		Writer(const char *device_name, unsigned long long length = 0);
 
+		Writer(int fd, unsigned long long length = 0);
+
 		virtual ~Writer();
 
  		/// @brief Set device output.

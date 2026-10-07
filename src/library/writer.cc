@@ -58,7 +58,7 @@
 
 	Writer::Writer(const char *devname, unsigned long long length) : std::string{devname} {
 
-		fd = open(devname,O_WRONLY|O_CREAT);
+		fd = open(devname,O_WRONLY|O_CREAT,0664);
 		if(fd == -1) {
  			throw system_error(errno, system_category(), Logger::Message({_("Error opening device '{}'"),devname}));
 		}

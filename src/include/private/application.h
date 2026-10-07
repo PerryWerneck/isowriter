@@ -33,7 +33,6 @@
 
 	class Group;
 	class Action;
-	class Progress;
 
 	class UDJAT_PRIVATE Application : private Udjat::Properties::ObjectBuilder {
 	private:
@@ -87,7 +86,7 @@
 		/// @return true if the build was successful.
 		bool build(const Udjat::Properties &props) override;
 
-		virtual std::shared_ptr<Reinstall::Progress> ProgressDialogFactory();
+		virtual std::shared_ptr<Udjat::Dialog::Progress> ProgressDialogFactory();
 
 		/// @brief Set non-interactive mode, usually for scripts.
 		/// @param value If true set non-interactive mode, if false set interactive mode.

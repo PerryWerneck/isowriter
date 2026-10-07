@@ -32,7 +32,7 @@
  #include <udjat/tools/intl.h>
  #include <stdexcept>
  #include <libisofs/libisofs.h> 
- #include <reinstall/progress.h>
+ #include <reinstall/dialog.h>
 
  #ifdef HAVE_UNISTD_H
 	#include <unistd.h>

@@ -28,7 +28,7 @@
  #include <udjat/tools/file/temporary.h>
  #include <cstdio>
  #include <stdexcept>
- #include <reinstall/progress.h>
+ #include <reinstall/dialog.h>
  #include <memory>
 
  #define LOCAL_TMP "tempfile.local"
