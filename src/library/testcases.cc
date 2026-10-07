@@ -125,11 +125,58 @@
 				Iso9660::Image image{isofile.save().c_str()};
 
 				// Apply template
-				Reinstall::Template grubcfg{"grub2","*/grub.cfg"};
+				class Template : public Reinstall::Template {
+				public:
+					Template(const char *name, const char *path) : Reinstall::Template{name,path} {
+					}
 
-				// Save template to apply contents.
-				grubcfg.save();
-				stream << "Replacing '" << grubcfg.path << "'" << endl;
+					void apply(std::ostream &out) {
+						Udjat::Template::apply(out,[](const char *key, std::ostream &stream) {
+							debug("key='",key,"'");
+
+							if(!strcasecmp(key,"boot-label")) {
+								stream << "Test iso editor";
+								return true;
+							}
+
+							if(!strcasecmp(key,"boot-label-vnc")) {
+								stream << "Test iso editor (vnc)";
+								return true;
+							}
+							
+							if(!strcasecmp(key,"install-kloading")) {
+								stream << "Loading kernel...";
+								return true;
+							}
+
+							if(!strcasecmp(key,"boot-kernel")) {
+								stream << "kernel";
+								return true;
+							}
+
+							if(!strcasecmp(key,"kernel-parameters")) {
+								stream << "ID=\"test\"";
+								return true;
+							}
+
+							if(!strcasecmp(key,"install-iloading")) {
+								stream << "Loading initrd...";
+								return true;
+							}
+
+							if(!strcasecmp(key,"boot-initrd")) {
+								stream << "initrd";
+								return true;
+							}
+
+							return false;
+						});
+					}
+
+				};
+	
+				stream << "Replacing '/EFI/BOOT/grub.cfg'" << endl;
+				image.push_back(make_shared<Template>("grub2","/EFI/BOOT/grub.cfg"));
 
 				stream << "Writing modified image" << endl;
 				image.write("/tmp/test.iso");

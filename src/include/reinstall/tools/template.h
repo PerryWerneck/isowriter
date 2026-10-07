@@ -29,7 +29,7 @@
 
  namespace Reinstall {
 
-	class UDJAT_API Template : public std::string, public Reinstall::DataSource::Item, private Udjat::Template {
+	class UDJAT_API Template : public std::string, public Reinstall::DataSource::Item, protected Udjat::Template {
 	public:
 		
 		/// @brief Build a template from properties.
@@ -44,8 +44,8 @@
 		/// @return The path to item file.
 		std::string save() override;
 
-		virtual void apply(std::ostream &stream);
-
+		virtual void apply(std::ostream &stream) = 0;
+		
 	};
 
  }

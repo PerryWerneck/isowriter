@@ -52,6 +52,11 @@
 		IsoWriteOpts *wopts = NULL;
 		char system_area[32768];
 
+		/// @brief Sources passed to push_back(). libisofs reads their files
+		/// when the image is written, and Item deletes temporary files from
+		/// its destructor.
+		std::vector<std::shared_ptr<Reinstall::DataSource::Item>> mapped;
+
 	public:
 
 		/// @brief Open image, download if necessary.
@@ -59,11 +64,13 @@
 		Image(const char *isoname);
 		~Image();
 
+		/// @brief Insert a disk file into the image, like xorriso -map.
+		/// @param source Disk object to insert. source->path is the ISO path.
 		void push_back(std::shared_ptr<Reinstall::DataSource::Item> source);
 
 		/// @brief Write iso image to file.
 		void write(const char *filename);
-		
+
 	};
 
  }

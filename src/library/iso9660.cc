@@ -39,6 +39,8 @@
  #include <cstdio>
  #include <cstdlib>
  #include <cstring>
+ #include <filesystem>
+ #include <string>
 
  using namespace Udjat;
  using namespace std;
@@ -58,7 +60,7 @@
 		/// iso_image_get_system_area() returns the options that will be
 		/// written, which are still 0 until we set them. The report is the
 		/// mask xorriso -boot_image any replay applies.
-		SystemAreaPlan read_system_area_plan(IsoImage *image) {
+		static SystemAreaPlan read_system_area_plan(IsoImage *image) {
 
 			SystemAreaPlan plan;
 			char **lines = NULL;
@@ -110,7 +112,7 @@
 
 		/// @brief Re-arm boot-info-table patching on file-backed El Torito images.
 		/// Patching an appended partition (no IsoFile) returns ISO_ISOLINUX_CANT_PATCH.
-		void replay_boot_images(IsoImage *image, int sa_options) {
+		static void replay_boot_images(IsoImage *image, int sa_options) {
 
 			int count = 0;
 			ElToritoBootImage **boots = NULL;
@@ -153,6 +155,188 @@
 
 			free(boots);
 			free(nodes);
+		}
+
+		namespace fs = std::filesystem;
+
+		static void iso_check(int rc, const char *action, const char *path) {
+			if(rc < 0) {
+				Logger::String{"Error ",action," '",path,"': ",iso_error_to_msg(rc)}.error();
+				throw runtime_error(iso_error_to_msg(rc));
+			}
+		}
+
+		/// @brief Absolute ISO path. "." and repeated slashes are collapsed.
+		/// ".." is rejected so the path cannot leave the image root.
+		static string normalize_iso_path(const char *path) {
+
+			if(!path || !*path) {
+				throw runtime_error(_("Missing ISO path for -map"));
+			}
+
+			const char *p = path;
+			if(p[0] == '.' && (p[1] == '/' || p[1] == '\0')) {
+				++p;
+			}
+
+			string out;
+			while(*p) {
+				while(*p == '/') {
+					++p;
+				}
+				if(!*p) {
+					break;
+				}
+
+				const char *start = p;
+				while(*p && *p != '/') {
+					++p;
+				}
+
+				string part(start, p);
+				if(part.empty() || part == ".") {
+					continue;
+				}
+				if(part == "..") {
+					throw runtime_error(_("ISO path must not contain '..'"));
+				}
+
+				out.push_back('/');
+				out += part;
+			}
+
+			return out.empty() ? string{"/"} : out;
+		}
+
+		static void split_iso_leaf(const string &path, string &parent, string &leaf) {
+			auto slash = path.rfind('/');
+			if(slash == string::npos || slash == 0) {
+				parent = "/";
+				leaf = slash == 0 ? path.substr(1) : path;
+				return;
+			}
+			parent = path.substr(0, slash);
+			leaf = path.substr(slash + 1);
+		}
+
+		/// @brief Create missing parents. Attributes are copied from the
+		/// parent, which is what libisofs does for implicit directories.
+		static IsoDir * ensure_iso_dir(IsoImage *image, const string &path) {
+
+			IsoDir *dir = iso_image_get_root(image);
+			if(path.empty() || path == "/") {
+				return dir;
+			}
+
+			size_t index = path[0] == '/' ? 1 : 0;
+			while(index < path.size()) {
+				auto slash = path.find('/', index);
+				string name = path.substr(index, slash == string::npos ? string::npos : slash - index);
+				index = slash == string::npos ? path.size() : slash + 1;
+				if(name.empty()) {
+					continue;
+				}
+
+				IsoNode *node = nullptr;
+				int rc = iso_image_dir_get_node(image, dir, name.c_str(), &node, 0);
+				iso_check(rc, "looking up", name.c_str());
+
+				if(rc != 1) {
+					IsoDir *created = nullptr;
+					rc = iso_image_add_new_dir(image, dir, name.c_str(), &created);
+					iso_check(rc, "creating directory", name.c_str());
+					dir = created;
+					continue;
+				}
+
+				// -overwrite nondir: a file or symlink in the way of a new
+				// directory is removed. An existing directory is kept.
+				if(!ISO_NODE_IS_DIR(node)) {
+					rc = iso_node_remove(node);
+					iso_check(rc, "removing", name.c_str());
+					IsoDir *created = nullptr;
+					rc = iso_image_add_new_dir(image, dir, name.c_str(), &created);
+					iso_check(rc, "creating directory", name.c_str());
+					dir = created;
+					continue;
+				}
+
+				dir = (IsoDir *) node;
+			}
+
+			return dir;
+		}
+
+		static void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path);
+
+		/// @brief Insert the children of a disk directory. -map of a directory
+		/// inserts the whole tree; two directories are merged.
+		static void map_children(IsoImage *image, IsoDir *parent, const char *disk_dir, const string &iso_dir) {
+
+			for(const auto &entry : fs::directory_iterator(disk_dir)) {
+				string name = entry.path().filename().string();
+				string child_iso = iso_dir == "/" ? "/" + name : iso_dir + "/" + name;
+				map_into(image, parent, name.c_str(), entry.path().c_str(), child_iso);
+			}
+
+		}
+
+		/// @brief xorriso -map with the default -overwrite "nondir".
+		/// A directory is not replaced by a file. Anything else is removed
+		/// and the disk object is inserted in its place. Disk symlinks are
+		/// not followed (-follow off).
+		static void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path) {
+
+			const bool disk_dir = fs::is_directory(fs::symlink_status(disk_path));
+
+			IsoNode *old = nullptr;
+			int rc = iso_image_dir_get_node(image, parent, leaf, &old, 0);
+			iso_check(rc, "looking up", iso_path.c_str());
+
+			if(rc == 1 && old && ISO_NODE_IS_DIR(old)) {
+				if(!disk_dir) {
+					throw runtime_error(Logger::Message{
+						_("Refusing to replace ISO directory '{}'"),
+						iso_path.c_str()
+					}.c_str());
+				}
+				map_children(image, (IsoDir *) old, disk_path, iso_path);
+				return;
+			}
+
+			if(rc == 1 && old) {
+				rc = iso_node_remove(old);
+				iso_check(rc, "removing", iso_path.c_str());
+			}
+
+			IsoNode *added = nullptr;
+			rc = iso_tree_add_new_node(image, parent, leaf, disk_path, &added);
+			iso_check(rc, "mapping", iso_path.c_str());
+
+			if(disk_dir) {
+				map_children(image, (IsoDir *) added, disk_path, iso_path);
+			}
+
+		}
+
+		static void map_disk_path(IsoImage *image, const char *disk_path, const string &iso_path) {
+
+			if(iso_path == "/") {
+				if(!fs::is_directory(fs::symlink_status(disk_path))) {
+					throw runtime_error(_("Cannot map a non-directory over '/'"));
+				}
+				map_children(image, iso_image_get_root(image), disk_path, "/");
+				return;
+			}
+
+			string parent;
+			string leaf;
+			split_iso_leaf(iso_path, parent, leaf);
+			if(leaf.empty()) {
+				throw runtime_error(_("Invalid ISO path"));
+			}
+
+			map_into(image, ensure_iso_dir(image, parent), leaf.c_str(), disk_path, iso_path);
 		}
 
 	}
@@ -295,6 +479,26 @@
 
 	void Image::push_back(std::shared_ptr<Reinstall::DataSource::Item> source) {
 
+		if(!source) {
+			throw invalid_argument(_("No source to map into the ISO image"));
+		}
+
+		if(source->path.empty()) {
+			throw runtime_error(_("Missing ISO path for remap"));
+		}
+
+		auto disk_path = source->save();
+		if(disk_path.empty()) {
+			throw runtime_error(_("Unable to save the file to map into the ISO image"));
+		}
+
+		// libisofs reads disk_path when the burn source is created. Keep the
+		// item alive so a temporary file survives until write().
+		mapped.push_back(source);
+
+		auto iso_path = normalize_iso_path(source->path.c_str());
+		Logger::String{"Mapping '",disk_path.c_str(),"' onto '",iso_path.c_str(),"'"}.trace();
+		map_disk_path(image, disk_path.c_str(), iso_path);
 
 	};
 

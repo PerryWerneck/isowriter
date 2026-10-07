@@ -51,20 +51,19 @@
         this->path = path;
     }
 
-    void Template::apply(std::ostream &out) {
-        Udjat::Template::apply(out,[](const char *key, std::ostream &stream){
-            debug("key='",key,"'");
+    // void Template::apply(std::ostream &out) {
+    //     apply(out,[](const char *key, std::ostream &stream){
+    //         debug("key='",key,"'");
 
-            return false;
-        });
-    }
+    //         return false;
+    //     });
+    // }
 
 	void Template::load(const std::function<bool(uint64_t current, const void *buf, size_t length)> &writer) {
         stringstream out;
         this->apply(out);
         auto text = out.str();
         writer(0,text.c_str(),text.size());
-
     }
 
 	std::string Template::save() {        
