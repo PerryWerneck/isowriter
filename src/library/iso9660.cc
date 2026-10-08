@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2026 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -41,8 +41,11 @@
  #include <cstdio>
  #include <cstdlib>
  #include <cstring>
- #include <filesystem>
+ #include <cerrno>
  #include <string>
+ #include <system_error>
+ #include <dirent.h>
+ #include <sys/stat.h>
 
  using namespace Udjat;
  using namespace std;
@@ -159,7 +162,16 @@
 			free(nodes);
 		}
 
-		namespace fs = std::filesystem;
+		/// @brief True when path is a directory. lstat so a symlink is not one (-follow off).
+		bool is_disk_directory(const char *path) {
+
+			struct stat st;
+			if(lstat(path, &st) < 0) {
+				throw system_error(errno, system_category(), Logger::Message{_("Unable to stat '{}'"), path});
+			}
+
+			return S_ISDIR(st.st_mode);
+		}
 
 		void iso_check(int rc, const char *action, const char *path) {
 			if(rc < 0) {
@@ -275,10 +287,50 @@
 		/// inserts the whole tree; two directories are merged.
 		void map_children(IsoImage *image, IsoDir *parent, const char *disk_dir, const string &iso_dir) {
 
-			for(const auto &entry : fs::directory_iterator(disk_dir)) {
-				string name = entry.path().filename().string();
+			// Closed on every exit, including a throw from map_into.
+			struct Directory {
+				DIR *handle;
+
+				explicit Directory(const char *path) : handle{opendir(path)} {
+					if(!handle) {
+						throw system_error(errno, system_category(), Logger::Message{_("Unable to open directory '{}'"), path});
+					}
+				}
+
+				~Directory() {
+					closedir(handle);
+				}
+
+				Directory(const Directory &) = delete;
+				Directory & operator=(const Directory &) = delete;
+			} dir{disk_dir};
+
+			for(;;) {
+
+				errno = 0;
+				dirent *entry = readdir(dir.handle);
+				if(!entry) {
+					if(errno != 0) {
+						throw system_error(errno, system_category(), Logger::Message{_("Unable to read directory '{}'"), disk_dir});
+					}
+					break;
+				}
+
+				if(entry->d_name[0] == '.' && (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0'))) {
+					continue;
+				}
+
+				// Copy the name before the next readdir or a recursive walk.
+				string name{entry->d_name};
+
+				string child_disk{disk_dir};
+				if(child_disk.empty() || child_disk.back() != '/') {
+					child_disk.push_back('/');
+				}
+				child_disk += name;
+
 				string child_iso = iso_dir == "/" ? "/" + name : iso_dir + "/" + name;
-				map_into(image, parent, name.c_str(), entry.path().c_str(), child_iso);
+				map_into(image, parent, name.c_str(), child_disk.c_str(), child_iso);
 			}
 
 		}
@@ -289,7 +341,7 @@
 		/// not followed (-follow off).
 		void map_into(IsoImage *image, IsoDir *parent, const char *leaf, const char *disk_path, const string &iso_path) {
 
-			const bool disk_dir = fs::is_directory(fs::symlink_status(disk_path));
+			const bool disk_dir = is_disk_directory(disk_path);
 
 			IsoNode *old = nullptr;
 			int rc = iso_image_dir_get_node(image, parent, leaf, &old, 0);
@@ -324,7 +376,7 @@
 		void map_disk_path(IsoImage *image, const char *disk_path, const string &iso_path) {
 
 			if(iso_path == "/") {
-				if(!fs::is_directory(fs::symlink_status(disk_path))) {
+				if(!is_disk_directory(disk_path)) {
 					throw runtime_error(_("Cannot map a non-directory over '/'"));
 				}
 				map_children(image, iso_image_get_root(image), disk_path, "/");
@@ -365,7 +417,7 @@
 	Image::Image(const char *isoname) {
 
 		int rc;
-		Controller &cntrl = Controller::get_instance();
+		Controller::get_instance();
 
 		rc = iso_image_new(PACKAGE_NAME, &image);
 		if(rc < 0) {
@@ -419,7 +471,7 @@
 			// loaded. A hardcoded 2 does that on every image.
 			ElToritoBootImage *boot = NULL;
 			if((plan.options & 2) && iso_image_get_boot_image(image, &boot, nullptr, nullptr) != 1) {
-				Logger::String{"No El Torito catalog; not applying ISOLINUX isohybrid patching"}.warning();
+				Logger::String{"No El Torito catalog; not applying ISOLINUX isohybrid patching"}.info();
 				plan.options &= ~2;
 			}
 
@@ -523,12 +575,11 @@
 		}
 
 		
+		auto progress = IsoWriter::Progress::Factory();
 		try {
 
 			uint64_t image_size = src->get_size(src);
 			auto writer = IsoWriter::Writer::get_instance(image_size);
-
-			auto progress = IsoWriter::Progress::Factory();
 			progress->url(writer->c_str());
 
 			uint64_t current = 0;
@@ -537,40 +588,26 @@
 			while(src->read_xt(src, buf, sizeof buf) == (int)sizeof buf) {
 				writer->write(current, (const char *) buf, sizeof buf);
 				current += sizeof buf;
-				progress->set(current,image_size);
+				if(progress->set(current,image_size)) {
+					throw runtime_error(Logger::Message{_("Writing the ISO image to '{}' was cancelled"),writer->c_str()});
+				}
 			}
+
+			progress->done();
 
 			src->free_data(src);
 			free(src);
-			progress->done();
 			
 		} catch(...) {
 
+			progress->failed();
+
 			src->free_data(src);
 			free(src);
+
 			throw;
 
 		}
-
-		// fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		// if (fd < 0) {
-		// 	throw system_error(errno, system_category(),filename);
-		// }
-
-		// /* read_xt devolve blocos de 2048; o writer do reinstall faz o mesmo. */
-		// while ((n = src->read_xt(src, buf, sizeof buf)) == (int)sizeof buf) {
-		// 	if (::write(fd, buf, sizeof buf) != (int)sizeof buf) {
-		// 		throw runtime_error("Error writing data");	
-		// 	}
-		// }
-
-		// if (n < 0) {
-		// 	throw runtime_error("Error reading block");
-		// }
-
-		// close(fd);
-		// src->free_data(src);
-		// free(src);
 
 	}
 
