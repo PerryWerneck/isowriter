@@ -204,24 +204,32 @@
 
 		auto progress = Progress::Factory();
 
-		if(local.empty()) {
+		try {
 
-			progress->url(remote.c_str());
-			auto filename = remote.tempfile([progress](uint64_t current, uint64_t total){
-				return progress->set(current,total);
-			});
+			if(local.empty()) {
 
-			local = String{"file://" LOCAL_TMP "/",filename.c_str()}.c_str();
+				progress->url(remote.c_str());
+				auto filename = remote.tempfile([progress](uint64_t current, uint64_t total){
+					return progress->set(current,total);
+				});
 
-		} else if(!remote.empty()) {
+				local = String{"file://" LOCAL_TMP "/",filename.c_str()}.c_str();
 
-			progress->url(remote.c_str());
-			remote.get(local.path().c_str(),[progress](uint64_t current, uint64_t total){
-				return progress->set(current,total);
-			});
-			
+			} else if(!remote.empty()) {
+
+				progress->url(remote.c_str());
+				remote.get(local.path().c_str(),[progress](uint64_t current, uint64_t total){
+					return progress->set(current,total);
+				});
+				
+			}
+
+		} catch(...) {
+			progress->failed();
+			throw;
 		}
 
+		progress->done();
 		return local.path();
 		
 	}
