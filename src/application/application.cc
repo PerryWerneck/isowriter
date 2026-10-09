@@ -36,6 +36,11 @@
  #include <udjat/ui/console/progress.h>
  #include <reinstall/dialog.h>
 
+ #ifdef HAVE_LIBISOFS
+	#define LIBISOFS_WITHOUT_LIBBURN
+	#include <libisofs/libisofs.h> 
+ #endif // HAVE_LIBISOFS
+
  using namespace Udjat;
  using namespace std;
 
@@ -50,6 +55,12 @@
 			throw std::logic_error("Application instance already exists");
 		}
 		instance = this;
+
+#ifdef HAVE_LIBISOFS
+		if(!iso_init()) {
+			throw runtime_error(_("Unexpected error initializing isofs"));
+		}
+#endif // HAVE_LIBISOFS
 
 #ifdef STATIC_MODULES
 		//
@@ -99,6 +110,9 @@
 	Application::~Application() {
 		instance = nullptr;
 		Module::unload();
+#ifdef HAVE_LIBISOFS
+		iso_finish();
+#endif // HAVE_LIBISOFS
 	}
 
 	int Application::run() {

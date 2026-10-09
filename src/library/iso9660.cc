@@ -395,29 +395,29 @@
 
 	}
 
-	Controller::Controller() {
-		Logger::String{"Initializing libisofs"}.info();
-		if(!iso_init()) {
-			throw runtime_error(_("Unexpected error initializing isofs"));
-		}
-		debug("Libisofs initialized");
-	}
+	// Controller::Controller() {
+	// 	Logger::String{"Initializing libisofs"}.info();
+	// 	if(!iso_init()) {
+	// 		throw runtime_error(_("Unexpected error initializing isofs"));
+	// 	}
+	// 	debug("Libisofs initialized");
+	// }
 
-	Controller::~Controller() {
-		Logger::String{"Deinitializing libisofs"}.trace();
-		iso_finish();
-	}
+	// Controller::~Controller() {
+	// 	Logger::String{"Deinitializing libisofs"}.trace();
+	// 	iso_finish();
+	// }
 
-	Controller & Controller::get_instance() {
-		static Controller instance;
-		return instance;
-	}
+	// Controller & Controller::get_instance() {
+	// 	static Controller instance;
+	// 	return instance;
+	// }
 
 
 	Image::Image(const char *isoname) {
 
 		int rc;
-		Controller::get_instance();
+		// Controller::get_instance();
 
 		rc = iso_image_new(PACKAGE_NAME, &image);
 		if(rc < 0) {
@@ -531,7 +531,7 @@
 
 	}
 
-	void Image::push_back(std::shared_ptr<IsoWriter::DataSource::Item> source) {
+	void Image::map(std::shared_ptr<IsoWriter::DataSource::Item> source) {
 
 		if(!source) {
 			throw invalid_argument(_("No source to map into the ISO image"));

@@ -177,7 +177,7 @@
 				};
 	
 				stream << "Replacing '/EFI/BOOT/grub.cfg'" << endl;
-				image.push_back(make_shared<Template>("grub2","/EFI/BOOT/grub.cfg"));
+				image.map(make_shared<Template>("grub2","/EFI/BOOT/grub.cfg"));
 
 				stream << "Writing modified image" << endl;
 

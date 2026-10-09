@@ -33,15 +33,15 @@
  namespace Iso9660 {
 
 	/// @brief Singleton for libisofs.
-	class UDJAT_API Controller {
-	private:
-		Controller();
-		~Controller();
+	// class UDJAT_API Controller {
+	// private:
+	// 	Controller();
+	// 	~Controller();
 
-	public:
-		static Controller & get_instance();
+	// public:
+	// 	static Controller & get_instance();
 
-	};
+	// };
 
 	class UDJAT_API Image {
 	private:
@@ -66,7 +66,7 @@
 
 		/// @brief Insert a disk file into the image, like xorriso -map.
 		/// @param source Disk object to insert. source->path is the ISO path.
-		void push_back(std::shared_ptr<IsoWriter::DataSource::Item> source);
+		void map(std::shared_ptr<IsoWriter::DataSource::Item> source);
 
 		/// @brief Write iso image to file.
 		void write();

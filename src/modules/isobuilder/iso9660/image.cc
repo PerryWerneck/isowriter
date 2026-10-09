@@ -43,10 +43,7 @@
  #include <udjat/ui/status.h>
 
  #define LIBISOFS_WITHOUT_LIBBURN
-
- extern "C" {
-	#include <libisofs/libisofs.h>
- }
+ #include <libisofs/libisofs.h>
  
  #include <sys/types.h>
  #include <sys/stat.h>
@@ -59,29 +56,29 @@
 
  namespace iso9660 {
 
-	class UDJAT_PRIVATE IsoBuilderSingleTon {
-	private:
-		IsoBuilderSingleTon() {
-			Logger::String{"Initializing libisofs"}.trace("iso9660");
-			iso_init();
-		}
+	// class UDJAT_PRIVATE IsoBuilderSingleTon {
+	// private:
+	// 	IsoBuilderSingleTon() {
+	// 		Logger::String{"Initializing libisofs"}.trace("iso9660");
+	// 		iso_init();
+	// 	}
 
-	public:
-		static IsoBuilderSingleTon &getInstance() {
-			static IsoBuilderSingleTon instance;
-			return instance;
-		}
+	// public:
+	// 	static IsoBuilderSingleTon &getInstance() {
+	// 		static IsoBuilderSingleTon instance;
+	// 		return instance;
+	// 	}
 
-		~IsoBuilderSingleTon() {
-			Logger::String{"Deinitializing libisofs"}.trace("iso9660");
-			iso_finish();
-		}
+	// 	~IsoBuilderSingleTon() {
+	// 		Logger::String{"Deinitializing libisofs"}.trace("iso9660");
+	// 		iso_finish();
+	// 	}
 
-	};
+	// };
 
 	Image::Image(IsoWriter::Builder *builder, const std::shared_ptr<Settings> s) : IsoWriter::Abstract::Image{builder}, settings{s} {
 
-		IsoBuilderSingleTon::getInstance();
+		// IsoBuilderSingleTon::getInstance();
 
 		if(!iso_image_new("name", &image)) {
 			throw runtime_error(_("Error creating iso image"));
