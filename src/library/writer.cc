@@ -56,6 +56,21 @@
 		Logger::String{"Default output device set to '",devname.c_str(),"'"}.trace();
 	}
 
+	const char * Writer::get_device_name() {
+#ifdef DEBUG
+		if(!devname.empty()) {
+			return devname.c_str();
+		}
+		return "/tmp/test.iso";
+#else
+		if(devname.empty()) {
+			throw logic_error("The required output filename was not supplied.");
+		}
+		return devname.c_str();
+#endif // DEBUG
+
+	}
+
 	Writer::Writer(const char *devname, const std::string &url, unsigned long long length) 
 		: Writer{open(devname,O_WRONLY|O_CREAT,0664),url,length} {
 	}

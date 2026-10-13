@@ -12,7 +12,7 @@
   <os>
     <type arch="x86_64" machine="pc-q35-5.2">hvm</type>
     <loader readonly="yes" type="pflash">/usr/share/qemu/ovmf-x86_64-smm-ms-code.bin</loader>
-    <nvram template="/usr/share/qemu/ovmf-x86_64-opensuse-4m-vars.bin" templateFormat="raw" format="raw">/tmp/reinstall.nvram</nvram>
+    <nvram template="/usr/share/qemu/ovmf-x86_64-smm-ms-vars.bin" templateFormat="raw" format="raw">/tmp/reinstall.nvram</nvram>
     <boot dev="hd"/>
 	  <smbios mode='sysinfo'/>
   </os>

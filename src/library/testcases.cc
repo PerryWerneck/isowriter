@@ -28,6 +28,7 @@
  #include <memory>
  #include <fcntl.h>
  #include <sys/types.h>
+ #include <reinstall/tools/writer.h>
 
  #ifdef HAVE_UNISTD_H
 	#include <unistd.h>
@@ -91,10 +92,11 @@
 				// Create file
 				#define IMAGE_SIZE (1ULL * 1024 * 1024 * 1024) // 1 GB in bytes
 
-				unlink("/tmp/test.iso");
 
 				FatFS::Image::Settings settings;
-				FatFS::Image disk{settings,"/tmp/test.iso",IMAGE_SIZE};
+
+				unlink(Writer::get_device_name());
+				FatFS::Image disk{settings,Writer::get_device_name(),IMAGE_SIZE};
 
 				std::vector<DataSource::Item> itens;
 				builder.load(itens);
@@ -109,12 +111,17 @@
 		 TestSuite::Case{
 			"isoeditor", "Test ISOEditor",
 			[](std::ostream &stream) {
-
+	
 				DataSource source{
 					"netinstall",
-					"https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Current.iso",
-					"file:///tmp/iso-editor-source.iso"
+					"file:///home/perry/project/files/iso/SLES-16.0-Online-x86_64-QU3.install.iso"
 				};
+
+				// DataSource source{
+				// 	"netinstall",
+				// 	"https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Current.iso",
+				// 	"file:///tmp/iso-editor-source.iso"
+				// };
 
 				DataSource::Item isofile;
 				source.load(isofile);
@@ -181,7 +188,8 @@
 
 				stream << "Writing modified image" << endl;
 
-				Writer::set_device_name("/tmp/test.iso");
+				// Force default name.
+				Writer::set_device_name(Writer::get_device_name());
 				image.write();
 
 				return "ISOEditor test passed";

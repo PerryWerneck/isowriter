@@ -51,6 +51,10 @@
  		/// @param path The device path.
  		static void set_device_name(const char *path);
 
+		/// @brief Get device output.
+		/// @return The device name set.
+		static const char * get_device_name();
+
 		/// @brief Write data to device.
 		/// @param length Block length.
 		void write(unsigned long long offset, const char *contents, unsigned long long length);

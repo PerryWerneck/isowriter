@@ -4,10 +4,12 @@ IMGNAME=$(basename ${ISONAME} | sed "s@.iso@@g")
 IMGFILE=/tmp/reinstall.qcow2
 NVRAM=/tmp/reinstall.nvram
 HDLEN=40G
-VM_URI="qemu:///system"
 XML="kvm/efi-usb.xml"
 
-rm -f ${NVRAM}
+if [ -z ${LIBVIRT_DEFAULT_URI} ]; then
+	echo "LIBVIRT_DEFAULT_URI is not defined"
+	exit -1
+fi
 
 sudo qemu-img \
 	create \
@@ -18,8 +20,8 @@ if [ "$?" != "0" ]; then
 	exit -1
 fi
 
+virsh undefine --nvram reinstall 2> /dev/null
 virsh \
-	-c "${VM_URI}" \
 	define \
 	${XML}
 if [ "$?" != "0" ]; then
