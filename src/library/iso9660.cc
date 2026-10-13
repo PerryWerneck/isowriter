@@ -41,6 +41,7 @@
  #include <cstdio>
  #include <cstdlib>
  #include <cstring>
+ #include <strings.h>
  #include <cerrno>
  #include <string>
  #include <system_error>
@@ -59,7 +60,44 @@
 			int heads = 0;
 			int secs = 0;
 			int part_offset = 0;
+			unsigned long long image_size_512 = 0;
+			bool saw_image_size = false;
+			int mbr_count = 0;
+			bool mbr_force_bootable_dummy = false;
+
+			struct MbrPart {
+				bool present = false;
+				int type = -1;
+			} mbr[4];
+
+			/// @brief First 16 GPT partitions, index 0 is partition 1.
+			struct GptPart {
+				bool present = false;
+				bool is_efi = false;
+				bool has_path = false;
+				bool saw_flags = false;
+				bool fresh_efi = false;
+				unsigned long long flags = 0;
+				unsigned long long start = 0;
+				unsigned long long blocks = 0;
+			} gpt[16];
+
+			/// @brief imported_iso interval of a path-less in-image ESP.
+			string efi_interval;
 		};
+
+		/// @brief EFI System Partition type GUID, raw byte order.
+		bool is_efi_type_guid(const char *guid) {
+			return strcasecmp(guid, "28732ac11ff8d211ba4b00a0c93ec93b") == 0;
+		}
+
+		bool gpt_index(const char *line, int &number) {
+			const char *colon = strchr(line, ':');
+			if(!colon || sscanf(colon + 1, " %d", &number) != 1) {
+				return false;
+			}
+			return number >= 1 && number <= 16;
+		}
 
 		/// @brief Options libisofs recognized in an imported system area.
 		/// iso_image_get_system_area() returns the options that will be
@@ -101,10 +139,70 @@
 				if(strstr(line, "MBR partition ") && !strstr(line, "table") && !strstr(line, "path")) {
 					const char *colon = strchr(line, ':');
 					int number = 0;
-					int status = 0;
-					if(colon && sscanf(colon + 1, " %d %i", &number, &status) == 2 && (status & 0x80)) {
+					unsigned int status = 0;
+					unsigned int type = 0;
+					unsigned long long start = 0;
+					unsigned long long blocks = 0;
+					int got = colon ? sscanf(colon + 1, " %d %i %i %llu %llu", &number, &status, &type, &start, &blocks) : 0;
+					if(got >= 2 && (status & 0x80)) {
 						plan.options |= (1 << 15); // mbr_force_bootable
 					}
+					if(got == 5 && number >= 1 && number <= 4) {
+						plan.mbr[number - 1].present = true;
+						plan.mbr[number - 1].type = (int) type;
+						if(number > plan.mbr_count) {
+							plan.mbr_count = number;
+						}
+						// Dummy entry libisofs uses to force the bootable flag.
+						if(status == 0x80 && type == 0x00 && start == 0 && blocks == 1) {
+							plan.mbr_force_bootable_dummy = true;
+						}
+					}
+				}
+
+				if(strstr(line, "ISO image size/512")) {
+					const char *colon = strchr(line, ':');
+					if(colon) {
+						plan.image_size_512 = strtoull(colon + 1, nullptr, 10);
+						plan.saw_image_size = true;
+					}
+				}
+
+				int number = 0;
+				if(strstr(line, "GPT type GUID") && gpt_index(line, number)) {
+					char guid[80];
+					const char *colon = strchr(line, ':');
+					if(colon && sscanf(colon + 1, " %*d %79s", guid) == 1) {
+						plan.gpt[number - 1].present = true;
+						if(is_efi_type_guid(guid)) {
+							plan.gpt[number - 1].is_efi = true;
+						}
+					}
+				}
+
+				if(strstr(line, "GPT partition flags:") && gpt_index(line, number)) {
+					const char *hex = strstr(line, "0x");
+					if(hex) {
+						plan.gpt[number - 1].present = true;
+						plan.gpt[number - 1].saw_flags = true;
+						plan.gpt[number - 1].flags = strtoull(hex, nullptr, 0);
+					}
+				}
+
+				if(strstr(line, "GPT start and size") && gpt_index(line, number)) {
+					unsigned long long start = 0;
+					unsigned long long blocks = 0;
+					const char *colon = strchr(line, ':');
+					if(colon && sscanf(colon + 1, " %*d %llu %llu", &start, &blocks) == 2) {
+						plan.gpt[number - 1].present = true;
+						plan.gpt[number - 1].start = start;
+						plan.gpt[number - 1].blocks = blocks;
+					}
+				}
+
+				if(strstr(line, "GPT partition path") && gpt_index(line, number)) {
+					plan.gpt[number - 1].present = true;
+					plan.gpt[number - 1].has_path = true;
 				}
 			}
 
@@ -112,10 +210,158 @@
 				iso_image_report_system_area(image, &lines, &count, 1 << 15);
 			}
 
+			// xorriso sets gpt_iso_not_ro when GPT partition 1 lacks the
+			// read-only flag (bit 60), even if that partition is the ESP.
+			if(plan.gpt[0].present && plan.gpt[0].saw_flags && !(plan.gpt[0].flags & (1ULL << 60))) {
+				plan.options |= (1 << 17);
+			}
+
 			return plan;
 		}
 
-		/// @brief Re-arm boot-info-table patching on file-backed El Torito images.
+		/// @brief Path-less EFI GPT partition that still lies inside the ISO.
+		/// Replay copies it with efi_boot_part instead of trusting the GPT
+		/// embedded in the system area. An isohybrid image mentions that
+		/// partition via gpt_basdat, which collides with efi_boot_part.
+		void select_efi_boot_part(SystemAreaPlan &plan) {
+
+			plan.efi_interval.clear();
+			if(plan.options & 2) {
+				return;
+			}
+
+			for(int i = 0; i < 16; ++i) {
+				SystemAreaPlan::GptPart &part = plan.gpt[i];
+				if(!part.present || !part.is_efi || part.has_path || part.blocks == 0) {
+					continue;
+				}
+				if(!plan.saw_image_size || plan.image_size_512 < part.start + part.blocks) {
+					continue;
+				}
+
+				char interval[96];
+				snprintf(
+					interval,
+					sizeof(interval),
+					"imported_iso:%llud-%llud::",
+					part.start,
+					part.start + part.blocks - 1
+				);
+				part.fresh_efi = true;
+				plan.efi_interval = interval;
+				return;
+			}
+		}
+
+		/// @brief Keep the GRUB2 MBR code and drop the imported partition tables.
+		/// Same bytes as grub2_mbr=--interval:imported_iso:0s-15s:zero_mbrpt,zero_gpt.
+		/// The imported GPT still names the ESP at its old address.
+		void keep_grub2_mbr_template(char system_area[32768]) {
+
+			char head[8192];
+			memcpy(head, system_area, sizeof(head));
+			memset(system_area, 0, 32768);
+			memcpy(system_area, head, sizeof(head));
+
+			unsigned char *bytes = (unsigned char *) system_area;
+			if(bytes[510] == 0x55 && bytes[511] == 0xaa) {
+				memset(system_area + 446, 0, 64);
+			}
+			memset(system_area + 512, 0, 8192 - 512);
+		}
+
+		/// @brief GRUB's iso9660 UUID is the PVD modification date.
+		/// The writer uses its own vol_uuid, not the timestamps imported with the image.
+		void preserve_volume_uuid(IsoImage *image, IsoWriteOpts *opts) {
+
+			char *creation = NULL;
+			char *modification = NULL;
+			char *expiration = NULL;
+			char *effective = NULL;
+
+			int rc = iso_image_get_pvd_times(image, &creation, &modification, &expiration, &effective);
+			if(rc < 0 || !modification || !modification[0]) {
+				return;
+			}
+
+			char uuid[17];
+			int length = 0;
+			while(length < 16 && modification[length] >= '0' && modification[length] <= '9') {
+				uuid[length] = modification[length];
+				++length;
+			}
+			uuid[length] = 0;
+			if(length != 16) {
+				return;
+			}
+
+			rc = iso_write_opts_set_pvd_times(opts, 0, 0, 0, 0, uuid);
+			if(rc != ISO_SUCCESS) {
+				throw runtime_error(iso_error_to_msg(rc));
+			}
+		}
+
+		bool eltorito_lba_matches(IsoImage *image, unsigned long long start) {
+
+			uint32_t lba = (uint32_t) (start / 4);
+			int count = 0;
+			ElToritoBootImage **boots = NULL;
+			IsoFile **nodes = NULL;
+			bool found = false;
+
+			int rc = iso_image_get_all_boot_imgs(image, &count, &boots, &nodes, 0);
+			if(rc > 0 && count > 0 && nodes) {
+				for(int i = 0; i < count && !found; ++i) {
+					if(!nodes[i]) {
+						continue;
+					}
+					int sections_count = 0;
+					struct iso_file_section *sections = NULL;
+					rc = iso_file_get_old_image_sections(nodes[i], &sections_count, &sections, 0);
+					if(rc > 0 && sections_count > 0 && sections && sections[0].block == lba) {
+						found = true;
+					}
+					free(sections);
+				}
+			}
+
+			free(boots);
+			free(nodes);
+			return found;
+		}
+
+		/// @brief part_like_isohybrid suppresses the protective MBR type 0xee.
+		/// A real protective GPT needs that type so UEFI firmware finds the ESP.
+		/// Isohybrid images already relied on the flag and keep it.
+		bool part_like_isohybrid(IsoImage *image, const SystemAreaPlan &plan) {
+
+			if(plan.options & 2) {
+				return true;
+			}
+
+			bool real_protective = (plan.options & 1)
+				&& plan.mbr[0].present
+				&& plan.mbr[0].type == 0xee
+				&& (plan.mbr_count == 1 || (plan.mbr_count == 2 && plan.mbr_force_bootable_dummy));
+			if(real_protective) {
+				return false;
+			}
+
+			for(int i = 0; i < 16; ++i) {
+				const SystemAreaPlan::GptPart &part = plan.gpt[i];
+				if(!part.present || part.fresh_efi || part.blocks == 0) {
+					continue;
+				}
+				if(eltorito_lba_matches(image, part.start)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/// @brief Re-arm boot-info-table patching on BIOS El Torito images.
+		/// Platform 0xef is the signed EFI filesystem; patching it breaks secure boot.
 		/// Patching an appended partition (no IsoFile) returns ISO_ISOLINUX_CANT_PATCH.
 		void replay_boot_images(IsoImage *image, int sa_options) {
 
@@ -135,8 +381,9 @@
 
 			for(int i = 0; i < count; ++i) {
 				int opts = el_torito_get_isolinux_options(boots[i], 0);
+				int platform = el_torito_get_boot_platform_id(boots[i]);
 
-				if(nodes[i] == NULL) {
+				if(nodes[i] == NULL || platform == 0xef) {
 					opts &= ~0x201;
 				} else {
 					if(el_torito_seems_boot_info_table(boots[i], 0)) {
@@ -149,10 +396,12 @@
 					} else {
 						opts &= ~(1 << 9);
 					}
-					// xorriso replay: isolinux partition_entry=gpt_basdat on the EFI image.
-					if((sa_options & 2) && el_torito_get_boot_platform_id(boots[i]) == 0xef) {
-						opts = (opts & ~0xfc) | (1 << 2);
-					}
+				}
+
+				// Isohybrid mentions the EFI image as a GPT basic-data partition.
+				// efi_boot_part is used instead when that bit is off, and the two collide.
+				if((sa_options & 2) && platform == 0xef) {
+					opts = (opts & ~0xfc) | (1 << 2);
 				}
 
 				el_torito_set_isolinux_options(boots[i], opts, 0);
@@ -475,7 +724,11 @@
 				plan.options &= ~2;
 			}
 
-			if(plan.options & 2) {
+			select_efi_boot_part(plan);
+
+			if(!plan.efi_interval.empty()) {
+				keep_grub2_mbr_template(system_area);
+			} else if(plan.options & 2) {
 				// zero_mbrpt: the isohybrid patch rebuilds the partition table.
 				memset(system_area + 446, 0, 64);
 			}
@@ -492,10 +745,23 @@
 				}
 			}
 
-			Logger::String{"Replaying system area options ", plan.options}.info();
+			if(!plan.efi_interval.empty()) {
+				rc = iso_write_opts_set_efi_bootp(wopts, plan.efi_interval.data(), 1);
+				if(rc != ISO_SUCCESS) {
+					throw runtime_error(iso_error_to_msg(rc));
+				}
+			}
+
+			Logger::String{
+				"Replaying system area options ",
+				plan.options,
+				plan.efi_interval.empty() ? "" : " efi_boot_part ",
+				plan.efi_interval.c_str()
+			}.info();
 		}
 
 		replay_boot_images(image, plan.options);
+		preserve_volume_uuid(image, wopts);
 
 		iso_write_opts_set_relaxed_vol_atts(wopts, 1);
 		iso_write_opts_set_rrip_version_1_10(wopts, 1);
@@ -503,7 +769,17 @@
 		iso_write_opts_set_joliet(wopts, 1);
 		iso_write_opts_set_iso_level(wopts, 3);
 		iso_write_opts_set_allow_deep_paths(wopts, 1);
-		iso_write_opts_set_part_like_isohybrid(wopts, 1);
+
+		// -padding included: 150 blocks of 2 KiB stay inside the image.
+		rc = iso_write_opts_set_tail_blocks(wopts, 150);
+		if(rc != ISO_SUCCESS) {
+			throw runtime_error(iso_error_to_msg(rc));
+		}
+
+		rc = iso_write_opts_set_part_like_isohybrid(wopts, part_like_isohybrid(image, plan) ? 1 : 0);
+		if(rc != ISO_SUCCESS) {
+			throw runtime_error(iso_error_to_msg(rc));
+		}
 
 	}
 
