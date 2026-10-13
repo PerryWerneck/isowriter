@@ -30,10 +30,8 @@ if [ "$?" != "0" ]; then
 	exit -1
 fi
 
-virsh undefine --nvram reinstall 2> /dev/null
-virsh \
-	define \
-	${XML}
+virsh undefine --nvram --remove-all-storage --tpm reinstall 2> /dev/null
+virsh define ${XML}
 	
 if [ "$?" != "0" ]; then
 	rm -f ${IMGFILE}
