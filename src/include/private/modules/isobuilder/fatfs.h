@@ -29,7 +29,7 @@
  #include <reinstall/image.h>
  #include <reinstall/tools/datasource.h>
 
- namespace FatFS {
+ namespace Module::IsoBuilder::FatFS {
 
 	class UDJAT_API Image : public IsoWriter::Image {
 	public:

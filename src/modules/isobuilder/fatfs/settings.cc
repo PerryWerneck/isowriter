@@ -28,7 +28,7 @@
 
  #ifdef HAVE_FATFS
 
- #include <reinstall/modules/fatfs.h>
+ #include <private/modules/isobuilder/fatfs.h>
  #include <fatfs/ff.h>
 
  using namespace Udjat;
@@ -36,7 +36,7 @@
 
  #error TODO: Implement label on fat image.
  
- namespace FatFS {
+ namespace Module::IsoBuilder::FatFS {
 
 	// Reference: http://elm-chan.org/fsw/ff/doc/mkfs.html
 

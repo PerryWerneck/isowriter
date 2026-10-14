@@ -25,7 +25,7 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <reinstall/tools/iso9660.h>
+ #include <private/modules/isoeditor/iso9660.h>
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/writer.h>
  #include <udjat/tools/logger.h>
@@ -51,7 +51,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace Iso9660 {
+ namespace Module::IsoEditor {
 
 	namespace {
 

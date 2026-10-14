@@ -173,7 +173,7 @@ if libisofs.found()
 	conf_data.set('HAVE_ISOHYBRID', 1)
 	conf_data.set('HAVE_ISOIMAGEDIR', 1)
 	lib_src += [
-		'src/library/iso9660.cc'
+		'src/modules/isoeditor/iso9660.cc'
 	]
 endif
 

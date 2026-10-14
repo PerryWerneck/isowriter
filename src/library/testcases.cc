@@ -37,11 +37,11 @@
  #ifdef HAVE_FATFS
 	#include <fatfs/ff.h>
 	#include <fatfs/diskio.h>
-	#include <reinstall/modules/fatfs.h>
+	#include <private/modules/isobuilder/fatfs.h>
  #endif // HAVE_FATFS
 
  #ifdef HAVE_LIBISOFS
-	#include <reinstall/tools/iso9660.h>
+	#include <private/modules/isoeditor/iso9660.h>
  #endif // HAVE_LIBISOFS
 
  #include <reinstall/tools/builder.h>
@@ -92,11 +92,10 @@
 				// Create file
 				#define IMAGE_SIZE (1ULL * 1024 * 1024 * 1024) // 1 GB in bytes
 
-
-				FatFS::Image::Settings settings;
+				Module::IsoBuilder::FatFS::Image::Settings settings;
 
 				unlink(Writer::get_device_name());
-				FatFS::Image disk{settings,Writer::get_device_name(),IMAGE_SIZE};
+				Module::IsoBuilder::FatFS::Image disk{settings,Writer::get_device_name(),IMAGE_SIZE};
 
 				std::vector<DataSource::Item> itens;
 				builder.load(itens);
@@ -130,7 +129,7 @@
 						<< "To   '" << isofile.local.c_str() << "'" << endl;
 
 				stream << "Loading image" << endl;
-				Iso9660::Image image{isofile.save().c_str()};
+				Module::IsoEditor::Image image{isofile.save().c_str()};
 
 				// Apply template
 				class Template : public IsoWriter::Template {

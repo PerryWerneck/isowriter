@@ -31,7 +31,7 @@
  #include <fatfs/ff.h>
  #include <fatfs/diskio.h>
  #include <udjat/tools/url.h>
- #include <reinstall/modules/fatfs.h>
+ #include <private/modules/isobuilder/fatfs.h>
  #include <reinstall/tools/datasource.h>
  #include <stdexcept>
 
@@ -45,7 +45,7 @@
  using namespace Udjat;
  using namespace std;
 
- namespace FatFS {
+ namespace Module::IsoBuilder::FatFS {
 
 	Image::Image(const Settings &settings, int filehandle) : fd{filehandle} {
 
