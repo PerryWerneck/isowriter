@@ -55,7 +55,8 @@
     <disk type="file" device="disk">
       <driver name="qemu" type="raw"/>
       <source file="/tmp/test.iso"/>
-      <target dev="sda" bus="usb"/>
+      <target dev="sda" bus="usb" removable="on"/>
+      <shareable />
       <address type="usb" bus="0" port="4"/>
     </disk>
     <controller type="usb" index="0" model="qemu-xhci" ports="15">

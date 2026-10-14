@@ -220,9 +220,10 @@
 		}
 
 		/// @brief Path-less EFI GPT partition that still lies inside the ISO.
-		/// Replay copies it with efi_boot_part instead of trusting the GPT
-		/// embedded in the system area. An isohybrid image mentions that
-		/// partition via gpt_basdat, which collides with efi_boot_part.
+		/// It is appended after the new image. Embedding it with efi_boot_part
+		/// covers the ISO with Gap0, and that gap is what the guest mounts as
+		/// /dev/sda1. An isohybrid image mentions the partition via gpt_basdat,
+		/// which collides with a second EFI partition.
 		void select_efi_boot_part(SystemAreaPlan &plan) {
 
 			plan.efi_interval.clear();
@@ -328,6 +329,40 @@
 			free(boots);
 			free(nodes);
 			return found;
+		}
+
+		/// @brief Make GPT partition 1 a mountable ISO and put the ESP after it.
+		/// libisofs only creates that ISO partition when the offset is 16.
+		/// Gap fillers are left out: they are not filesystems, and mount
+		/// reports a bad superblock for them.
+		void publish_mountable_partitions(IsoWriteOpts *opts, string &efi_interval, int secs, int heads) {
+
+			if(secs <= 0) {
+				secs = 32;
+			}
+			if(heads <= 0) {
+				heads = 64;
+			}
+
+			int rc = iso_write_opts_set_part_offset(opts, 16, secs, heads);
+			if(rc != ISO_SUCCESS) {
+				throw runtime_error(iso_error_to_msg(rc));
+			}
+
+			rc = iso_write_opts_set_partition_img(opts, 2, 0xef, efi_interval.data(), 1);
+			if(rc != ISO_SUCCESS) {
+				throw runtime_error(iso_error_to_msg(rc));
+			}
+
+			rc = iso_write_opts_set_appended_as_gpt(opts, 1);
+			if(rc != ISO_SUCCESS) {
+				throw runtime_error(iso_error_to_msg(rc));
+			}
+
+			rc = iso_write_opts_set_gpt_with_gaps(opts, 1, 0, 0);
+			if(rc != ISO_SUCCESS) {
+				throw runtime_error(iso_error_to_msg(rc));
+			}
 		}
 
 		/// @brief part_like_isohybrid suppresses the protective MBR type 0xee.
@@ -738,15 +773,10 @@
 				throw runtime_error(iso_error_to_msg(rc));
 			}
 
-			if(plan.heads > 0 && plan.secs > 0) {
-				rc = iso_write_opts_set_part_offset(wopts, (uint32_t) plan.part_offset, plan.secs, plan.heads);
-				if(rc != ISO_SUCCESS) {
-					throw runtime_error(iso_error_to_msg(rc));
-				}
-			}
-
 			if(!plan.efi_interval.empty()) {
-				rc = iso_write_opts_set_efi_bootp(wopts, plan.efi_interval.data(), 1);
+				publish_mountable_partitions(wopts, plan.efi_interval, plan.secs, plan.heads);
+			} else if(plan.heads > 0 && plan.secs > 0) {
+				rc = iso_write_opts_set_part_offset(wopts, (uint32_t) plan.part_offset, plan.secs, plan.heads);
 				if(rc != ISO_SUCCESS) {
 					throw runtime_error(iso_error_to_msg(rc));
 				}
@@ -755,7 +785,7 @@
 			Logger::String{
 				"Replaying system area options ",
 				plan.options,
-				plan.efi_interval.empty() ? "" : " efi_boot_part ",
+				plan.efi_interval.empty() ? "" : " append_efi ",
 				plan.efi_interval.c_str()
 			}.info();
 		}

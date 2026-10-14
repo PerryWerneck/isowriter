@@ -16,6 +16,8 @@ if [ "$?" != "0" ]; then
 	exit $?
 fi
 
+virsh undefine --nvram --remove-all-storage --tpm reinstall 2> /dev/null
+
 .build/isowriter -O ${ISONAME} -i
 if [ "$?" != "0" ]; then
 	exit $?
@@ -30,7 +32,6 @@ if [ "$?" != "0" ]; then
 	exit -1
 fi
 
-virsh undefine --nvram --remove-all-storage --tpm reinstall 2> /dev/null
 virsh define ${XML}
 	
 if [ "$?" != "0" ]; then
