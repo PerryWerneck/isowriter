@@ -30,6 +30,7 @@
  #include <reinstall/tools/writer.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/intl.h>
+ #include <udjat/ui/status.h>
  #include <stdexcept>
  #include <libisofs/libisofs.h> 
  #include <reinstall/dialog.h>
@@ -679,25 +680,6 @@
 
 	}
 
-	// Controller::Controller() {
-	// 	Logger::String{"Initializing libisofs"}.info();
-	// 	if(!iso_init()) {
-	// 		throw runtime_error(_("Unexpected error initializing isofs"));
-	// 	}
-	// 	debug("Libisofs initialized");
-	// }
-
-	// Controller::~Controller() {
-	// 	Logger::String{"Deinitializing libisofs"}.trace();
-	// 	iso_finish();
-	// }
-
-	// Controller & Controller::get_instance() {
-	// 	static Controller instance;
-	// 	return instance;
-	// }
-
-
 	Image::Image(const char *isoname) {
 
 		int rc;
@@ -856,17 +838,24 @@
 		// item alive so a temporary file survives until write().
 		mapped.push_back(source);
 
-		auto iso_path = normalize_iso_path(source->path.c_str());
-		Logger::String{"Mapping '",disk_path.c_str(),"' onto '",iso_path.c_str(),"'"}.trace();
-		map_disk_path(image, disk_path.c_str(), iso_path);
+		// Do the mapping
+		map(disk_path.c_str(),source->path.c_str());
 
-	};
+	}
+
+	void Image::map(const char *from, const char *to) {
+		auto iso_path = normalize_iso_path(to);
+		Logger::String{"Mapping '",from,"' onto '",to,"'"}.trace();
+		map_disk_path(image, from, iso_path);
+	}
 
 	void Image::write() {
 
 		struct burn_source *src = NULL;
 		int rc;
+		auto &status = Udjat::Dialog::Status::getInstance();
 
+		status.sub_title(_("Preparing to write"));
 		rc = iso_image_update_sizes(image);
 
 		if (rc < 0) {
@@ -886,6 +875,8 @@
 
 			uint64_t image_size = src->get_size(src);
 			auto writer = IsoWriter::Writer::get_instance(image_size);
+
+			status.sub_title(_("Writing ISO9660 image"));
 			progress->url(writer->c_str());
 
 			uint64_t current = 0;

@@ -57,6 +57,11 @@
 		/// @param source Disk object to insert. source->path is the ISO path.
 		void map(std::shared_ptr<IsoWriter::DataSource::Item> source);
 
+		/// @brief Insert a disk file into the image, like xorriso -map.
+		/// @param from Path for file in disk.
+		/// @param to The path inside image.
+		void map(const char *from, const char *to);
+
 		/// @brief Write iso image to file.
 		void write();
 
