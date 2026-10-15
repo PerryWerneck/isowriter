@@ -1,0 +1,3 @@
+option('product_domain', type: 'string', value: 'br.eti.werneck', description: 'The product domain')
+option('product_description', type: 'string', value: 'Installation media creation tool', description: 'The product description')
+

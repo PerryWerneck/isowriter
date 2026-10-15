@@ -100,7 +100,12 @@ libudjat = dependency(
 	'libudjat',
 	version : '>=3.0.0',
 	fallback: [ 'libudjat' ],
-	default_options: ['default_library=static'],
+	default_options: [
+		'default_library=static', 
+		'product_name="@0@"'.format(meson.project_name()),
+		'product_title="@0@"'.format(project_description),
+		'product_domain=@0@'.format(get_option('product_domain'))
+	],
 )
 
 deps = [
@@ -150,7 +155,6 @@ conf_data.set_quoted('MODULE_VERSION',libversion)
 conf_data.set_quoted('DATADIR',get_option('prefix') + '/' + get_option('datadir'))
 conf_data.set_quoted('LOCALEDIR',get_option('prefix') + '/' + get_option('localedir'))
 
-conf_data.set('application_description',project_description)
 conf_data.set('application_icon','@0@.@1@'.format(libudjat.get_variable('product_domain'),meson.project_name()))
 conf_data.set('application_name', meson.project_name())
 
