@@ -132,7 +132,7 @@
 			},
 #ifdef DEBUG
 			Argument{
-				'i', "interactive-testcases", "Run testsuite",
+				'T', "testcases", "Run test cases",
                 [](const char *arg, char) {
 
 					IsoWriter::Application application;
