@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <reinstall/action.h>
  #include <reinstall/tools/datasource.h>
+ #include <reinstall/tools/repository.h>
  #include <udjat/tools/properties.h>
  #include <memory>
  #include <string>
@@ -37,7 +38,7 @@
 		/// @brief System kernel.
 		class Kernel : public IsoWriter::DataSource {
 		public:
-			Kernel(const char *remote, const char *local = nullptr) : DataSource{remote,local} {		
+			Kernel(const char *remote, const char *local = nullptr) : DataSource{"kernel",remote,local} {		
 			}
 
 		};
@@ -45,7 +46,7 @@
 		/// @brief System initrd
 		class InitRD : public IsoWriter::DataSource {
 		public:
-			InitRD(const char *remote, const char *local = nullptr) : DataSource{remote,local} {		
+			InitRD(const char *remote, const char *local = nullptr) : DataSource{"inird",remote,local} {		
 			}
 
 		};
@@ -83,6 +84,7 @@
 
 		/// @brief Load URLs for builder files.
 		void load(std::vector<DataSource::Item> &itens);
+
 
 		/// @brief Iterate from all builder files.
 		/// @param task The tastk to be called on every file.

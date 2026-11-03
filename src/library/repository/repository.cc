@@ -277,8 +277,9 @@
 // 		return true;
 // 	}
 
-	static void parse_index_html(const char *name, const char *root, const URL &url, std::vector<String> &files) {
+	static void parse_index_html(const char *name, const URL &url, std::vector<String> &files) {
 
+		debug("--------------------------- ",__FUNCTION__," ---------------------------");
 		Logger::String{"Loading ",url.c_str()}.trace(name);
 
 		auto progress = Progress::Factory();
@@ -293,38 +294,35 @@
 		}
 
 		HtmlParser parser;
-		shared_ptr<HtmlDocument> doc = parser.Parse(response.c_str(), response.size());
+		auto doc = parser.Parse(response.c_str(), response.size());
 		if(!doc) {
 			throw runtime_error("Error parsing HTML");
 		}
 
-		std::vector<shared_ptr<HtmlElement>> elements = doc->GetElementByTagName("a");
-		for(auto &element : elements) {
+		for(auto &element : doc->GetElementByTagName("a")) {
 
-			String href = element->GetAttribute("href");
-			if(href.empty() || href[0] == '?' || href[0] == '/' || href.has_prefix("http://") || href.has_prefix("https://")) {	
+	 		String href{element->GetAttribute("href")};
+			if(href.empty() || href[0] == '?' || href[0] == '/' || href[0] == '#' || href.has_prefix("../") || href.has_prefix("http://") || href.has_prefix("https://")) {	
 				continue;
 			}	
 
-			if(href[href.size()-1] == '/') {
-				parse_index_html(
-					name,
-					String{root,href.c_str()}.c_str(),
-					URL{url.c_str(),href.c_str()},
-					files
-				);
-			} else {
+			URL u{url.c_str()};
+			u += href.c_str();
 
-				debug("Adding file ",String{root,href.c_str()}.c_str());
-				files.emplace_back(String{root,href.c_str()}.c_str());
-
+			if(href.at(href.size()-1) == '/') {
+				debug("Found directory ",u.c_str());
+				parse_index_html(name, u, files);
+				continue;
 			}
+
+			debug(u.c_str());
+			files.emplace_back(u.c_str());
 
 		}
 
 	}
 
-	bool Repository::index(const char *filename) {
+	static bool index(const char *name, std::vector<Udjat::String> &files, const char *filename) {
 
 #ifdef HAVE_ZLIB
 		gzFile fd = gzopen(filename, "r");
@@ -355,7 +353,7 @@
 
 		gzclose(fd);
 
-		Logger::String{"Got ",files.size()," filenames from repository index."}.trace(c_str());
+		Logger::String{"Got ",files.size()," filenames from index."}.trace(name);
 
 		return true;
 #else
@@ -365,13 +363,18 @@
 
 	void Repository::reset() {
 
+		// TODO: If we have SLP support, try to get the repository URL from SLP.
+
+
+		contents(c_str(),source,files,try_index_gz);
+	}
+
+	void Repository::contents(const char *name, const DataSource::Item &source, std::vector<Udjat::String> files, const bool try_index_gz) {
+
 		debug("Loading repository index from ",source.remote.c_str());
 		
 		// Clear the repository contents.
 		files.clear();
-
-		// TODO: If we have SLP support, try to get the repository URL from SLP.
-
 
 		// Reload index
 		files.clear();
@@ -386,7 +389,7 @@
 			URL url = source.remote;
 			url += "INDEX.gz";
 
-			Logger::String{"Searching for ",url.c_str()}.trace(c_str());
+			Logger::String{"Searching for ",url.c_str()}.trace(name);
 
 			try {
 
@@ -408,29 +411,28 @@
 						return false;
 					});
 					progress->done();
-					index(filename.c_str());
+					index(name,files,filename.c_str());
 					return;
 
 				} else {
 
-					// No local path, use cache.
+					// No local path, use temporary file.
 					debug("Using remote file");
 					filename = url.tempfile([&progress](uint64_t current, uint64_t total){
 						progress->set(current,total);
 						return false;
 					});
 					progress->done();
-					index(filename.c_str());
+					index(name,files,filename.c_str());
 					unlink(filename.c_str());
 					return;
 				}
 
 			} catch(const std::exception &e) {
 
-				Logger::String{url.c_str(),": ",e.what()}.error(c_str());
+				Logger::String{url.c_str(),": ",e.what()}.error(name);
 
 			}
-
 
 		}
 #endif // HAVE_ZLIB
@@ -438,7 +440,23 @@
 		// TODO: Parse jsontable, example: https://download.opensuse.org/download/tumbleweed/repo/oss/boot/x86_64/?jsontable
 
 		// Parse index.html
-		parse_index_html(c_str(),"./",URL{source.remote.c_str(),"/"},files);
+		{
+			URL url{source.remote.c_str()};
+			if(url.at(url.size()-1) != '/') {
+				((std::string) url).append("/");
+			}
+			debug("-----------> ",url.c_str());
+			parse_index_html(name,url,files);
+
+			debug("Got ",files.size()," filenames from index.html");
+
+			std::sort(files.begin(), files.end());                  // bring duplicates together
+			auto last = std::unique(files.begin(), files.end());    // move unique elements to the front
+			files.erase(last, files.end());
+
+			debug("Got ",files.size()," unique filenames from index.html");
+			
+		}
 
 	}
 

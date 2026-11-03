@@ -36,8 +36,6 @@
 		void sanitize(const Udjat::URL &url);
 		std::vector<Udjat::String> files;
 
-		bool index(const char *filename);
-
 	protected:
 		bool allow_cache;
 		bool try_index_gz = true;
@@ -73,6 +71,11 @@
 		void absolute(Udjat::URL &remote, Udjat::URL &local);
 	
 		void load(const char *path, std::vector<DataSource::Item> &itens);
+
+		/// @brief Get all files for URLs.
+		/// @param source The datasource with the origin URL.
+		/// @param files The vector for file paths.
+		static void contents(const char *name, const DataSource::Item &source, std::vector<Udjat::String> files, const bool use_index_gz = true);
 
 	};
 

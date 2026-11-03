@@ -132,20 +132,15 @@
 			},
 #ifdef DEBUG
 			Argument{
-				'T', "testcases", "Run test cases",
+				'i', "testcases", "Run test cases",
                 [](const char *arg, char) {
 
 					IsoWriter::Application application;
 
 					TestSuite testsuite;
 					udjat_register_tests(testsuite);
-					testsuite.load();
 
-					if(arg && *arg) {
-						testsuite.run(arg);
-					} else {
-						testsuite.interactive();
-					}
+					testsuite.load().run(arg);
 
 					return Result::ExitNow;
 				}

@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <reinstall/tools/builder.h>
  #include <reinstall/tools/datasource.h>
+ #include <reinstall/tools/repository.h>
  #include <udjat/tools/properties.h>
  #include <memory>
 
@@ -33,10 +34,12 @@
 
  namespace IsoWriter {
 
-	Builder::Builder(const Udjat::Properties &props) : IsoWriter::Action{props["name"].as_quark()} {
+	Builder::Builder(const Udjat::Properties &props) : IsoWriter::Action{props} {
 	}
 
 	bool Builder::push_back(std::shared_ptr<IsoWriter::DataSource> source) {
+		
+		debug("Inserting '",source->c_str(),"'");
 		
 		{
 			auto k = dynamic_pointer_cast<Kernel>(source);

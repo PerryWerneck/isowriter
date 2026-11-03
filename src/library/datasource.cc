@@ -191,13 +191,25 @@
 		}
 
 		if(repo) {
-			debug("Loading ",url.c_str()," from repository '",repo->c_str(),"'");
+			Logger::String{"Loading items from '",url.c_str(),"'"} .trace(c_str());
 			repo->load(url.path().c_str(),itens);
+
+		} else if(url.has_suffix("/")) {
+
+			Logger::String{"Loading items from '",url.c_str(),"'"} .trace(c_str());
+			std::vector<Udjat::String> files;
+			Repository::contents(c_str(),item,files);
+			debug("Got ",files.size()," files");
+
+			debug("**************** INCOMPLETE");
+
 		} else {
-			throw runtime_error("Non repository based datasource is not implemented yet");
+
+			Logger::String{"Loading item from '",url.c_str(),"'"} .trace(c_str());
+			itens.emplace_back(item);
+
 		}
 
-		Logger::String{"Loaded ",itens.size()," items from '",url.c_str(),"'"} .trace(c_str());
 	}
 
 	std::string DataSource::Item::save() {

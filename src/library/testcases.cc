@@ -203,6 +203,14 @@
 				builder.push_back(make_shared<Builder::Kernel>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/linux"));
 				builder.push_back(make_shared<Builder::InitRD>("https://download.opensuse.org/tumbleweed/repo/oss/boot/x86_64/loader/initrd"));
 
+				builder.push_back(make_shared<DataSource>("boot","https://download.opensuse.org/tumbleweed/repo/oss/boot/"));
+				builder.push_back(make_shared<DataSource>("efi","https://download.opensuse.org/tumbleweed/repo/oss/EFI/"));
+
+				std::vector<DataSource::Item> itens;
+				builder.load(itens);
+
+				stream << "Item count: " << itens.size() << endl;
+
 
 				return "ISOBuilder test passed";
 			}
