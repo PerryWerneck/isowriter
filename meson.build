@@ -76,6 +76,7 @@ libslp = cxx.find_library('slp', required: false)
 gtkmm = dependency('gtkmm-4.0', required: false)
 libarchive = dependency('libarchive', required: false)
 zlib= dependency('zlib', required: false)
+json_c = dependency('json', required: false)
 
 libisofs =	dependency(
 	'libisofs-1',
@@ -115,6 +116,7 @@ deps = [
 	libisoburn,
 	libslp,
 	zlib,
+	json_c,
 	fatfs,
 	libarchive,
 	cxx.find_library('dl', required: false),
@@ -169,6 +171,10 @@ endif
 
 if(zlib.found())
 	conf_data.set('HAVE_ZLIB', 1)
+endif
+
+if(json_c.found())
+	conf_data.set('HAVE_JSON_C', 1)
 endif
 
 if libisofs.found()

@@ -40,6 +40,10 @@
      #include <zlib.h>
  #endif // HAVE_ZLIB
 
+ #ifdef HAVE_JSON_C
+ 	#include <json-c/json.h>
+ #endif // HAVE_JSON_C
+
  using namespace Udjat;
  using namespace std;
 
@@ -322,6 +326,81 @@
 
 	}
 
+#ifdef HAVE_JSON_C
+	static bool parse_index_json(const char *name, const char *path, std::vector<String> &files) noexcept {
+
+		URL url{path,"?jsontable"};
+
+		Logger::String{"Loading ",url.c_str()}.trace(name);
+
+		auto progress = Progress::Factory();
+		progress->set(url.c_str());
+		String response = url.get([progress](uint64_t current, uint64_t total){
+			progress->set(current,total);
+			return false;
+		});
+
+		if(response.empty()) {
+			return false;
+		}
+
+		debug(response.c_str());
+
+		struct json_object *root = json_tokener_parse(response.c_str());
+		if (!root) {
+			Logger::String{"Error parsing JSON from ",url.c_str()}.error(name);
+			return false;
+		}
+
+		struct json_object *data_array = NULL;
+		if (!json_object_object_get_ex(root, "data", &data_array) || !json_object_is_type(data_array, json_type_array)) {
+			Logger::String{"Missing or invalid \"data\" array on json response from ",url.c_str()}.error(name);
+			json_object_put(root);
+			return false;
+		}		
+
+		// Seens like json_c is not reentrant, so we will not use it in parallel. We will parse the json response and get the files and directories.
+		std::vector<URL> dirs;
+
+		size_t len = json_object_array_length(data_array);
+		bool rc = true;
+		for (size_t i = 0; i < len; i++) {
+
+			struct json_object *item = json_object_array_get_idx(data_array, i);
+			if (!item || !json_object_is_type(item, json_type_object))
+				continue;
+
+			struct json_object *obj = NULL;	
+        	if (json_object_object_get_ex(item, "name", &obj) && json_object_is_type(obj, json_type_string)) {
+ 
+				URL u{path};
+				u += json_object_get_string(obj);
+
+				if(u.c_str()[u.size()-1] == '/') {
+					debug("Found directory ",u.c_str());
+					dirs.emplace_back(u.c_str());
+				} else {
+					debug(u.c_str());
+					files.emplace_back(u.c_str());	
+				}
+
+        	}
+
+		}
+		json_object_put(root);
+
+		for(const auto &dir : dirs) {
+			if(!parse_index_json(name, dir.c_str(), files)) {
+				rc = false;
+				break;
+			}
+		}
+
+		return rc;
+		
+	}
+#endif // HAVE_JSON_C
+
 	static bool index(const char *name, std::vector<Udjat::String> &files, const char *filename) {
 
 #ifdef HAVE_ZLIB
@@ -437,8 +516,21 @@
 		}
 #endif // HAVE_ZLIB
 
-		// TODO: Parse jsontable, example: https://download.opensuse.org/download/tumbleweed/repo/oss/boot/x86_64/?jsontable
+#ifdef HAVE_JSON_C
+		// Parse JSONTABLE
+		// example: https://download.opensuse.org/download/tumbleweed/repo/oss/boot/x86_64/?jsontable
 
+		{
+			// TODO: Parse jsontable, 
+			if(parse_index_json(name,source.remote.c_str(),files)) {
+				throw runtime_error("Incomplete");
+				return;
+			}
+
+
+		}
+
+#endif
 		// Parse index.html
 		{
 			URL url{source.remote.c_str()};
@@ -455,7 +547,7 @@
 			files.erase(last, files.end());
 
 			debug("Got ",files.size()," unique filenames from index.html");
-			
+
 		}
 
 	}
