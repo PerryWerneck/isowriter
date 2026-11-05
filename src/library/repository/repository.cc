@@ -164,123 +164,6 @@
 
 	}
 
-
-	// Udjat::URL Repository::url(bool rm) {
-
-	// 	if(rm || source.local.empty()) {
-
-	// 		// Get remote URL
-
-	// 		if(!strcasecmp(source.remote.scheme().c_str(),"slp")) {
-	// 			// Resolve SLP
-	// 			throw runtime_error("SLP support is not implemented yet");
-	// 		}
-
-	// 		return source.remote;
-	// 	}
-
-	// 	return source.local;
-
-	// }
-
-
-//  #include <config.h>
-//  #include <udjat/defs.h>
-//  #include <udjat/tools/properties.h>
-//  #include <udjat/tools/object.h>
-//  #include <udjat/tools/intl.h>
-//  #include <udjat/ui/progress.h>
-//  #include <udjat/tools/file/path.h>
-//  #include <udjat/tools/configuration.h>
-//  #include <udjat/tools/url.h>
-//  #include <udjat/tools/url/handler.h>
-//  #include <udjat/tools/configuration.h>
-
-//  #include <reinstall/tools/datasource.h>
-//  #include <reinstall/tools/repository.h>
-//  #include <private/slpclient.h>
-//  #include <private/html_parser.hpp>
-//  #include <list>
-//  #include <vector>
-
-//  #ifdef HAVE_ZLIB
-// 	#include <zlib.h>
-//  #endif // HAVE_ZLIB
-
-//  using namespace Udjat;
-//  using namespace std;
-
-//  namespace IsoWriter {
-
-// 	Repository::Repository(const Udjat::Properties &node) : FileSource{node,false}, KernelParameter{node}, kparm{node}, slpclient{SLPClient::Factory(node)} {
-
-// 		if(!(url.remote && *url.remote)) {
-// 			throw runtime_error(Logger::String{"Repository '",name(),"' has no remote URL defined"});
-// 		}
-
-// 		Logger::String{"Using '",url.remote,"' as remote path for repository"}.trace(name());
-
-// 		if(!(url.local && *url.local)) {
-			
-// 			String path{Config::Value<string>{"repository","cachedir",""}.c_str()};
-// 			if(path.empty()) {
-// 				throw runtime_error(Logger::String{"Repository '",name(),"' has no cache defined"});
-// 			}
-
-// 			FileSource::expand(path,node);
-// 			path.expand(node);
-
-// #ifdef DEBUG
-// 			debug("Expanding path ",path.c_str());
-// 			if(strchr(path.c_str(),'$')) {
-// 				throw logic_error("Error expanding variable");
-// 			}
-// #endif
-
-// 			url.local = path.as_quark();
-// 			Logger::String{"Using '",url.local,"' as local path for repository"}.trace(name());
-
-// 		}
-
-// 		if(!(kparm.slp && *kparm.slp) && kparm.enabled) {
-
-// 			const char *srvc = slpclient->service();
-// 			if(!(srvc && *srvc)) {
-
-// 				// No SLP for this repository.
-// 			 	Logger::String{"SLP service name is not defined, disabling it for this repository"}.warning(name());
-
-// 			} else if(!(kparm.slp && *kparm.slp)) {
-				
-// 				Logger::Message url{Config::Value<string>{"kernel-parameters","slp","slp://?{}&auto=1"}.c_str(),srvc};
-// 				kparm.slp = url.as_quark();
-
-// 			}
-
-// 		}
-
-// 	}
-
-// 	Repository::~Repository() {
-// 	}
-
-// 	bool Repository::operator==(const Repository &repo) const noexcept {
-
-// 		if(strcasecmp(name(),repo.name())) {
-// 			return false;
-// 		}
-
-// 		if(strcasecmp(url.remote,repo.url.remote)) {
-// 			return false;
-// 		}
-
-// 		if(slpclient.get() && repo.slpclient.get()) {
-// 			return *slpclient == *repo.slpclient;
-// 		}
-
-// 		return true;
-// 	}
-
 	static void parse_index_html(const char *name, const URL &url, std::vector<String> &files) {
 
 		debug("--------------------------- ",__FUNCTION__," ---------------------------");
@@ -519,18 +402,11 @@
 #ifdef HAVE_JSON_C
 		// Parse JSONTABLE
 		// example: https://download.opensuse.org/download/tumbleweed/repo/oss/boot/x86_64/?jsontable
-
-		{
-			// TODO: Parse jsontable, 
-			if(parse_index_json(name,source.remote.c_str(),files)) {
-				throw runtime_error("Incomplete");
-				return;
-			}
-
-
+		if(parse_index_json(name,source.remote.c_str(),files)) {
+			return;
 		}
+#endif // HAVE_JSON_C
 
-#endif
 		// Parse index.html
 		{
 			URL url{source.remote.c_str()};
@@ -551,67 +427,6 @@
 		}
 
 	}
-
-
-// 	const char * Repository::remote() const {
-
-// 		const char *url = slpclient->url();
-// 		if(url && *url) {
-// 			return url;
-// 		}
-
-// 		return FileSource::remote();
-// 	}
-
-// 	std::string Repository::value(const Udjat::Abstract::Object &object) const {
-
-// 		String value;
-
-// 		if(kparm.slp && *kparm.slp) {
-// 			const char *url = slpclient->url();
-// 			if(url && *url) {
-// 				value = kparm.slp;
-// 			}
-// 		}
-
-// 		if(value.empty()) {
-// 			value = remote();
-// 		}
-
-// 		value.expand(object);
-
-// 		if(value.empty()) {
-// 			throw logic_error(Logger::Message{_("Kernel parameter for repository '{}' has an empty value"),name()});
-// 		}
-
-// 		return value;
-// 	}
-
-// 	void Repository::preset(const char *arg) {
-// 		const char *ptr = strchr(arg,'=');
-
-// 		if(!ptr) {
-// 			ptr = strchr(arg,':');
-// 		}
-
-// 		if(ptr) {
-
-// 			preset(string{arg,(size_t) (ptr-arg)}.c_str(),ptr+1);
-
-// 		} else {
-
-// 			Config::Value<string> target{"install-targets",arg};
-// 			if(target.empty()) {
-// 				throw std::runtime_error{Logger::Message(_("No target found for '{}', please check your configuration"),arg)};
-// 			}
-
-// 			preset("install",target.c_str());
-
-// 		}
-
-// 	}
-
-//  }
 
  }
 

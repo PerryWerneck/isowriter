@@ -139,6 +139,7 @@
 
 					void apply(std::ostream &out) {
 						Udjat::Template::apply(out,[](const char *key, std::ostream &stream) {
+
 							debug("key='",key,"'");
 
 							if(!strcasecmp(key,"boot-label")) {
@@ -182,8 +183,8 @@
 
 				};
 	
-				stream << "Replacing '/EFI/BOOT/grub.cfg'" << endl;
-				image.map(make_shared<Template>("grub2","/EFI/BOOT/grub.cfg"));
+				stream << "Replacing 'grub.cfg'" << endl;
+				image.map(make_shared<Template>("grub-sle-16.cfg","/boot/grub2/grub.cfg"));
 
 				stream << "Writing modified image" << endl;
 

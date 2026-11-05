@@ -834,6 +834,8 @@
 			throw runtime_error(_("Unable to save the file to map into the ISO image"));
 		}
 
+		debug("Mapping disk path '",disk_path,"' onto ISO path '",source->path,"'");
+		
 		// libisofs reads disk_path when the burn source is created. Keep the
 		// item alive so a temporary file survives until write().
 		mapped.push_back(source);
