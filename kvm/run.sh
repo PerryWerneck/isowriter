@@ -18,6 +18,10 @@ fi
 
 virsh undefine --nvram --remove-all-storage --tpm reinstall 2> /dev/null
 
+if [ -e ${ISONAME} ]; then
+	sudo rm -f ${ISONAME}
+fi
+
 .build/isowriter -O ${ISONAME} -i
 if [ "$?" != "0" ]; then
 	exit $?

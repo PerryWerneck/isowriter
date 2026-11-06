@@ -163,7 +163,12 @@
 							}
 
 							if(!strcasecmp(key,"kernel-parameters")) {
-								stream << "ID=\"test\"";
+								const char *params = getenv("KERNEL_PARAMS");
+								if(params) {
+									stream << params;
+								} else {
+									stream << "ID=\"test\"";
+								}
 								return true;
 							}
 
