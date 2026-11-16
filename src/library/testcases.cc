@@ -209,9 +209,14 @@
 		 TestSuite::Case{
 			"slp", "Test SLP client",
 			[](std::ostream &stream) {
-				SLPClient client{"service:sles16.0"};
-				client.detect();
-				return "SLP Client Ok";
+
+				SLPClient::init();
+				
+				// SLPClient client{"service:sles16.0"};
+				// client.detect();
+
+				auto text = URL{"slp://sles16.0/repodata/repomd.xml"}.get();
+				return "SLP Client is ok";
 			}
 		},
 #endif // HAVE_LIBSLP

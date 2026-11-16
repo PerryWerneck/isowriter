@@ -54,7 +54,7 @@
 		/// @param url The URL to search for.
 		/// @return The SLPClient object for the URL (exception if not found).
 		SLPClient & find(const URL &url) {
-			auto service_name = url.hostname();
+			String service_name{"service:",url.hostname().c_str()};
 			auto scope_list = url.argument("scope");
 			auto filter = url.argument("filter");
 
@@ -81,19 +81,27 @@
 
 		std::shared_ptr<URL::Handler> HandlerFactory(const URL &url) const override {
 			auto &client = const_cast<SLPClient::Controller *>(this)->find(url);
-			client.detect();
 
+			URL reference{client.detect()};
+			debug("Base URL: '",reference.c_str(),"'");
 
+			reference += url.path().c_str();
+
+			debug("Target URL: '",reference.c_str(),"'");
 
 			throw runtime_error("Incomplete");
 		}
 
-		static Controller & getInstance() {
+		static Controller & get_instance() {
 			static Controller instance;
 			return instance;
 		}
 
 	};
+
+	void SLPClient::init() {
+		Controller::get_instance();
+	}
 
 	SLPClient & SLPClient::factory(const char *sn, const char *sl, const char *f, bool al) {
 		throw runtime_error("SLPClient::factory() not implemented");
@@ -131,10 +139,10 @@
 
 	}
 
-	bool SLPClient::detect() {
+	const char * SLPClient::detect() {
 
-		if(detected) {
-			return true;
+		if(!detected.empty()) {
+			return detected.c_str();
 		}
 
 		if(!message) {
@@ -224,7 +232,7 @@
 							port = std::to_string(parsed->s_iPort);
 						}
 
-						if(Socket::for_each(parsed->s_pcHost,port.c_str(),[this,ignored_adresses](const sockaddr_storage &addr){
+						auto found = Socket::for_each(parsed->s_pcHost,port.c_str(),[this,ignored_adresses](const sockaddr_storage &addr){
 			
 							IP::Address ipaddr{addr};
 							for(const auto &ignored : ignored_adresses) {
@@ -235,11 +243,30 @@
 							}
 
 							Logger::String{"Accepting response ",ipaddr.to_string().c_str()}.trace();
+							return true;
+						});
+						
+						SLPFree(parsed);
 
+						if(found) {			
+							
+							debug("Using ",response.c_str());
+							const char *ptr = response.c_str();
+							for(size_t ix = 0; ix < 2; ix++) {
+								ptr = strchr(ptr,':');
+								if(!ptr) {
+									Logger::String{"Rejecting bad formatted response '",response.c_str(),"'"}.warning();
+									found = false;
+									break;
+								}
+								ptr++;
+							}
 
-							return false;
-						})) {							
-							break;
+							if(found) {
+								detected = ptr;
+								Logger::String{"Using '",detected.c_str(),"'"}.info();
+								break;
+							}
 						}
 					}
 
@@ -257,7 +284,7 @@
 
 		SLPClose(hSlp);
 		progress->success();
-		return detected;
+		return detected.c_str();
 
 	}
 

@@ -37,14 +37,17 @@
 		const char *filter;
 		bool allow_local;
 		
-		bool detected = false;
+		String detected;
 		const char *message = nullptr;	///< @brief The message for search dialog progress.
 
 	public:
+
+		static void init();
+		
 		static SLPClient & factory(const char *service_name, const char *scope_list = "", const char *filter = "", bool allow_local = false);
 		SLPClient(const char *service_name, const char *scope_list = "", const char *filter = "", bool allow_local = false);
 
-		bool detect();
+		const char * detect();
 
 	};
 
