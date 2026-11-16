@@ -23,41 +23,70 @@
 
  #pragma once
  #include <udjat/defs.h>
- #include <udjat/tools/properties.h>
- #include <udjat/tools/object.h>
+ #include <udjat/tools/string.h>
 
  namespace IsoWriter {
 
-	class UDJAT_API SLPClient : public Udjat::NamedObject {
+	class UDJAT_API SLPClient : public Udjat::String {
 	private:
-		const char *service_type = "";
-		const char *scope_list = "";
-		const char *filter = "";
-		const char *message = "";	///< @brief The message for search dialog progress.
-		bool allow_local = false;
+		class Controller;
+		friend class Controller;
 
-		struct {
-			std::string url;
-			bool done = false;
-		} query;
+		const char *service_name;
+		const char *scope_list;
+		const char *filter;
+		bool allow_local;
+		
+		bool detected = false;
+		const char *message = nullptr;	///< @brief The message for search dialog progress.
 
 	public:
-		SLPClient(const Udjat::Properties &node);
+		static SLPClient & factory(const char *service_name, const char *scope_list = "", const char *filter = "", bool allow_local = false);
+		SLPClient(const char *service_name, const char *scope_list = "", const char *filter = "", bool allow_local = false);
 
-		bool operator==(const SLPClient &b) const noexcept;
-
-		void clear() noexcept;
-
-		/// @brief Detect url.
-		/// @return URL from slp service, empty if not found.
-		const char *url();
-
-		inline const char * service() const noexcept {
-			return service_type;
-		}
-
-		static std::shared_ptr<SLPClient> Factory(const Udjat::Properties &node);
+		bool detect();
 
 	};
 
  }
+
+
+//  #include <udjat/defs.h>
+//  #include <udjat/tools/properties.h>
+//  #include <udjat/tools/object.h>
+
+//  namespace IsoWriter {
+
+// 	class UDJAT_API SLPClient : public Udjat::NamedObject {
+// 	private:
+// 		const char *service_type = "";
+// 		const char *scope_list = "";
+// 		const char *filter = "";
+// 		const char *message = "";	///< @brief The message for search dialog progress.
+// 		bool allow_local = false;
+
+// 		struct {
+// 			std::string url;
+// 			bool done = false;
+// 		} query;
+
+// 	public:
+// 		SLPClient(const Udjat::Properties &node);
+
+// 		bool operator==(const SLPClient &b) const noexcept;
+
+// 		void clear() noexcept;
+
+// 		/// @brief Detect url.
+// 		/// @return URL from slp service, empty if not found.
+// 		const char *url();
+
+// 		inline const char * service() const noexcept {
+// 			return service_type;
+// 		}
+
+// 		static std::shared_ptr<SLPClient> Factory(const Udjat::Properties &node);
+
+// 	};
+
+//  }

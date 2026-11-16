@@ -23,6 +23,7 @@ lib_src = [
 	'src/library/image.cc',
 	'src/library/template.cc',
 	'src/library/writer.cc',
+	'src/library/slpclient.cc',
 ]
 
 project_description = 'Installation media creation tool'
@@ -105,7 +106,9 @@ libudjat = dependency(
 		'default_library=static', 
 		'product_name="@0@"'.format(meson.project_name()),
 		'product_title="@0@"'.format(project_description),
-		'product_domain=@0@'.format(get_option('product_domain'))
+		'product_domain=@0@'.format(get_option('product_domain')),
+		'enable_vmdetect=false',
+		'enable_dmiget=false',
 	],
 )
 

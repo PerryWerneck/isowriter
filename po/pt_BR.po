@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: reinstall 5.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 14:55-0300\n"
+"POT-Creation-Date: 2026-11-06 09:29-0300\n"
 "PO-Revision-Date: 2026-10-14 14:59-0300\n"
 "Last-Translator: Perry Werneck <perry.werneck@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <perry.werneck@gmail.com>\n"
@@ -45,54 +45,54 @@ msgstr "Grava imagem em arquivo ao invés de um dispositivo"
 msgid "filename"
 msgstr "Nome do arquivo"
 
-#: src/application/main.cc:156
+#: src/application/main.cc:151
 msgid "Run in text mode"
 msgstr "Rodar em modo text"
 
-#: src/application/main.cc:163
+#: src/application/main.cc:158
 msgid "Run in graphical mode"
 msgstr "Executar em modo gráfico"
 
-#: src/application/main.cc:170
+#: src/application/main.cc:165
 msgid "Build options"
 msgstr "Opções de construção"
 
-#: src/application/main.cc:172
+#: src/application/main.cc:167
 #, fuzzy
 msgid "Auto-select image to build"
 msgstr "Seleciona destino automaticamente"
 
-#: src/application/main.cc:172
+#: src/application/main.cc:167
 msgid "path"
 msgstr "caminho"
 
-#: src/application/main.cc:179
+#: src/application/main.cc:174
 msgid "Quit after processing"
 msgstr "Encerra ao final do processamento"
 
-#: src/application/main.cc:185
+#: src/application/main.cc:180
 #, fuzzy
 msgid "Reboot after processing"
 msgstr "Encerra ao final do processamento"
 
-#: src/application/main.cc:190
+#: src/application/main.cc:185
 msgid "Network options"
 msgstr "Opções de rede"
 
-#: src/application/main.cc:192
+#: src/application/main.cc:187
 #, fuzzy
 msgid "Set URL for installation repository"
 msgstr "Nenhuma mídia de instalação"
 
-#: src/application/main.cc:199
+#: src/application/main.cc:194
 msgid "Set hostname/ip for all repositories"
 msgstr "Fixa hostname/ip para todos os repositórios"
 
-#: src/application/main.cc:206
+#: src/application/main.cc:201
 msgid "Set installation repository from target-name"
 msgstr "Define repositório de instalação pelo nome do destino"
 
-#: src/application/main.cc:212
+#: src/application/main.cc:207
 msgid "Disable SLP search"
 msgstr "Desativa pesquisa SLP"
 
@@ -250,7 +250,7 @@ msgstr "Não foi possível alocar espaço para o arquivo de saída"
 msgid "Required repository '{}' not found at {}"
 msgstr "Repositório '{}' não foi encontrado no caminho {}"
 
-#: src/library/repository/repository.cc:394
+#: src/library/repository/repository.cc:359
 msgid "Loading repository index"
 msgstr "Carregando índice do repositório"
 
@@ -323,6 +323,11 @@ msgstr "Comando ou script externo falhou"
 msgid "Configuring, please wait..."
 msgstr "Configurando, aguarde..."
 
+#: src/library/template.cc:75
+#, fuzzy
+msgid "Error opening output file"
+msgstr "Erro ao abrir /etc/mtab"
+
 #: src/library/writer.cc:81
 #, c++-format
 msgid "Error opening device '{}'"
@@ -342,11 +347,6 @@ msgstr "Erro ao obter informações sobre '{}'"
 #, c++-format
 msgid "Device '{}' is invalid"
 msgstr ""
-
-#: src/library/template.cc:75
-#, fuzzy
-msgid "Error opening output file"
-msgstr "Erro ao abrir /etc/mtab"
 
 #: src/modules/isobuilder/fatfs/image.cc:53
 #, fuzzy
@@ -400,6 +400,7 @@ msgid "Unexpanded path in source list"
 msgstr "Caminho incorreto na lista de fontes"
 
 #: src/modules/isobuilder/iso9660/image.cc:428
+#: src/modules/isoeditor/iso9660.cc:860
 msgid "Preparing to write"
 msgstr "Preparando para gravar"
 
@@ -426,19 +427,6 @@ msgstr "Gerando imagem FAT"
 #: src/modules/isobuilder/module.cc:138
 msgid "Writing FAT Image"
 msgstr "Gerando imagem FAT"
-
-#: src/modules/isowriter/module.cc:74 src/modules/isoeditor/module.cc:74
-msgid "Updating ISO image"
-msgstr "Atualizando imagem ISO"
-
-#: src/modules/isowriter/module.cc:76 src/modules/isowriter/module.cc:104
-#: src/modules/isoeditor/module.cc:76 src/modules/isoeditor/module.cc:104
-msgid "Writing ISO image"
-msgstr "Gravando imagem ISO"
-
-#: src/modules/isowriter/module.cc:81 src/modules/isoeditor/module.cc:81
-msgid "Getting ISO image"
-msgstr "Obtendo imagem ISO"
 
 #: src/modules/grub2/module.cc:86
 msgid "Getting installation kernel"
@@ -472,59 +460,77 @@ msgstr "Primeiro estágio"
 msgid "Second stage"
 msgstr "Segundo estágio"
 
-#: src/modules/isoeditor/iso9660.cc:454
+#: src/modules/isoeditor/iso9660.cc:455
 #, fuzzy, c++-format
 msgid "Unable to stat '{}'"
 msgstr "Não foi possível escrever em fat://{}"
 
-#: src/modules/isoeditor/iso9660.cc:472
+#: src/modules/isoeditor/iso9660.cc:473
 msgid "Missing ISO path for -map"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:499
+#: src/modules/isoeditor/iso9660.cc:500
 msgid "ISO path must not contain '..'"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:580
+#: src/modules/isoeditor/iso9660.cc:581
 #, fuzzy, c++-format
 msgid "Unable to open directory '{}'"
 msgstr "Não foi possível encontrar um ponto de montagem para '{}'"
 
-#: src/modules/isoeditor/iso9660.cc:598
+#: src/modules/isoeditor/iso9660.cc:599
 #, fuzzy, c++-format
 msgid "Unable to read directory '{}'"
 msgstr "Não foi possível encontrar um ponto de montagem para '{}'"
 
-#: src/modules/isoeditor/iso9660.cc:637
+#: src/modules/isoeditor/iso9660.cc:638
 #, c++-format
 msgid "Refusing to replace ISO directory '{}'"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:664
+#: src/modules/isoeditor/iso9660.cc:665
 msgid "Cannot map a non-directory over '/'"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:674
+#: src/modules/isoeditor/iso9660.cc:675
 #, fuzzy
 msgid "Invalid ISO path"
 msgstr "Argumento inválido para repositório: {}"
 
-#: src/modules/isoeditor/iso9660.cc:843
+#: src/modules/isoeditor/iso9660.cc:825
 msgid "No source to map into the ISO image"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:847
+#: src/modules/isoeditor/iso9660.cc:829
 msgid "Missing ISO path for remap"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:852
+#: src/modules/isoeditor/iso9660.cc:834
 msgid "Unable to save the file to map into the ISO image"
 msgstr ""
 
-#: src/modules/isoeditor/iso9660.cc:898
+#: src/modules/isoeditor/iso9660.cc:881
+#, fuzzy
+msgid "Writing ISO9660 image"
+msgstr "Gravando imagem ISO"
+
+#: src/modules/isoeditor/iso9660.cc:891
 #, c++-format
 msgid "Writing the ISO image to '{}' was cancelled"
 msgstr ""
+
+#: src/modules/isoeditor/module.cc:74 src/modules/isowriter/module.cc:74
+msgid "Updating ISO image"
+msgstr "Atualizando imagem ISO"
+
+#: src/modules/isoeditor/module.cc:76 src/modules/isoeditor/module.cc:104
+#: src/modules/isowriter/module.cc:76 src/modules/isowriter/module.cc:104
+msgid "Writing ISO image"
+msgstr "Gravando imagem ISO"
+
+#: src/modules/isoeditor/module.cc:81 src/modules/isowriter/module.cc:81
+msgid "Getting ISO image"
+msgstr "Obtendo imagem ISO"
 
 #: src/ui/console/application.cc:79
 msgid "Select system:"

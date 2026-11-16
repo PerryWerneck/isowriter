@@ -44,6 +44,10 @@
 	#include <private/modules/isoeditor/iso9660.h>
  #endif // HAVE_LIBISOFS
 
+ #ifdef HAVE_LIBSLP
+	#include <private/slpclient.h>
+ #endif // HAVE_LIBSLP
+
  #include <reinstall/tools/builder.h>
  #include <reinstall/tools/datasource.h>
  #include <reinstall/tools/repository.h>
@@ -201,6 +205,16 @@
 			}
 		},
 #endif // HAVE_LIBISOFS
+#ifdef HAVE_LIBSLP
+		 TestSuite::Case{
+			"slp", "Test SLP client",
+			[](std::ostream &stream) {
+				SLPClient client{"service:sles16.0"};
+				client.detect();
+				return "SLP Client Ok";
+			}
+		},
+#endif // HAVE_LIBSLP
 		 TestSuite::Case{
 			"isobuilder", "Test ISOBuilder",
 			[](std::ostream &stream) {

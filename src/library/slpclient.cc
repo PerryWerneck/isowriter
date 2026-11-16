@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2026 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -22,79 +22,85 @@
   */
 
  #include <config.h>
- #include <udjat/defs.h>
- #include <udjat/tools/properties.h>
- #include <udjat/tools/object.h>
- #include <udjat/tools/intl.h>
- #include <udjat/ui/status.h>
- #include <mutex>
- #include <udjat/net/ip/address.h>
- #include <sys/types.h>
- #include <sys/socket.h>
- #include <netdb.h>
 
  #ifdef HAVE_LIBSLP
-	#include <slp.h>
- #endif // HAVE_LIBSLP
 
- #include <unistd.h>
- #include <list>
+ #define LOG_DOMAIN "slpclient"
 
+ #include <slp.h>
  #include <private/slpclient.h>
+ #include <udjat/tools/url.h>
+ #include <udjat/tools/url/handler.h>
+ #include <udjat/tools/intl.h>
+ #include <udjat/tools/memory.h>
+ #include <memory>
+ #include <reinstall/dialog.h>
+ #include <udjat/net/ip/address.h>
+ #include <udjat/tools/socket.h>
+ #include <udjat/tools/logger.h>
+ #include <list>
 
  using namespace Udjat;
  using namespace std;
 
  namespace IsoWriter {
 
-	SLPClient::SLPClient(const Udjat::Properties &node) 
-		: service_type{node["slp-service-type"].as_quark()},
-		 	scope_list{node["slp-scope-list"].as_quark()},
-		 	filter{node["slp-filter"].as_quark()},
-			message{node.get("slp-search-message",service_type).as_quark()},
-			allow_local{node.get("slp-allow-local",false)}
-	{
-	}
+	class SLPClient::Controller : private std::list<SLPClient>, public URL::Handler::Factory {
+	private:
 
-	bool SLPClient::operator==(const SLPClient &b) const noexcept {
-		return service_type == b.service_type && scope_list == b.scope_list && filter == b.filter && allow_local == b.allow_local;
-	}
+		mutable std::mutex guard;
 
-	static std::shared_ptr<SLPClient> cache(std::shared_ptr<SLPClient> client) {
+		/// @brief Find SLP service for URL.
+		/// @param url The URL to search for.
+		/// @return The SLPClient object for the URL (exception if not found).
+		SLPClient & find(const URL &url) {
+			auto service_name = url.hostname();
+			auto scope_list = url.argument("scope");
+			auto filter = url.argument("filter");
 
-		static mutex guard;
-		lock_guard<mutex> lock(guard);
+			std::lock_guard<std::mutex> lock(guard);
 
-		static list<std::shared_ptr<SLPClient>> clients;
-
-		for(auto cached : clients) {
-			if(*cached == *client) {
-				return cached;
+			for(auto &client : *this) {
+				if(strcasecmp(client.service_name, service_name.c_str()) == 0 &&
+				   strcasecmp(client.scope_list, scope_list.c_str()) == 0 &&
+				   strcasecmp(client.filter, filter.c_str()) == 0) {
+					return client;
+				}
 			}
+
+			Logger::String{"Cant find SLP service for '",url,"', creating a new one"}.trace();
+			emplace_back(service_name.as_quark(), scope_list.as_quark(), filter.as_quark());
+			return back();
+
 		}
 
-		clients.push_back(client);
+	public:
 
-		return client;
+		Controller() : URL::Handler::Factory{"slp","Service Location Protocol (SLP)"} {
+		};
 
-	}
+		std::shared_ptr<URL::Handler> HandlerFactory(const URL &url) const override {
+			auto &client = const_cast<SLPClient::Controller *>(this)->find(url);
+			client.detect();
 
-	std::shared_ptr<SLPClient> SLPClient::Factory(const Udjat::Properties &node) {
-		return cache(std::make_shared<SLPClient>(node));
-	}
 
-	void SLPClient::clear() noexcept {
-		if(service_type && *service_type) {
-			Logger::String{"Search for '",service_type,"' was disabled"}.info("slpclient");
+
+			throw runtime_error("Incomplete");
 		}
-		service_type = "";
-		scope_list = "";
-		filter = "";
-		query.url.clear();
-		query.done = true;
+
+		static Controller & getInstance() {
+			static Controller instance;
+			return instance;
+		}
+
+	};
+
+	SLPClient & SLPClient::factory(const char *sn, const char *sl, const char *f, bool al) {
+		throw runtime_error("SLPClient::factory() not implemented");
 	}
 
- #ifdef HAVE_LIBSLP
+	SLPClient::SLPClient(const char *sn, const char *sl, const char *f, bool al) : service_name{sn}, scope_list{sl}, filter{f}, allow_local{al} {
+	}
 
 	struct SRV_URL_CB_INFO  {
 		SLPError callbackerr;
@@ -125,50 +131,38 @@
 
 	}
 
-	static void extract_url_from_response(const std::string &from, std::string &to) {
+	bool SLPClient::detect() {
 
-		const char *ptr = from.c_str();
-		for(size_t ix = 0; ix < 2; ix++) {
-			ptr = strchr(ptr,':');
-			if(!ptr) {
-				Logger::String{"Rejecting bad formatted response '",from,"'"}.warning("slp");
-			}
-			ptr++;
+		if(detected) {
+			return true;
 		}
 
-		to.assign(ptr);
+		if(!message) {
+			message = _("Searching for SLP service");
+		}
 
-	}
-#endif // HAVE_LIBSLP
+		auto progress = Progress::Factory();
+		progress->url(service_name);
 
-	const char * SLPClient::url() {
+		SLPError err;
+		SLPHandle hSlp;
 
-		static mutex guard;
-		lock_guard<mutex> lock(guard);
+		err = SLPOpen(NULL, SLP_FALSE, &hSlp);
+		if(err != SLP_OK) {
+			throw runtime_error(_("Unable to open SLP service"));
+		}
 
-#ifdef HAVE_LIBSLP
-		if(service_type && *service_type && !query.done) {
-
-			auto &status = Dialog::Status::getInstance();
-			status.busy(message);
+		try {
 
 			// https://github.com/ManageIQ/slp/blob/master/examples/raw_example.c
 			// https://docs.oracle.com/cd/E19455-01/806-0628/6j9vie80v/index.html
-			SLPError err;
-			SLPHandle hSlp;
 
-			err = SLPOpen(NULL, SLP_FALSE, &hSlp);
-			if(err != SLP_OK) {
-				Logger::String{"SLPOpen has failed"}.warning("slp");
-				return "";
-			}
-
+			Logger::String{"Searching for ",service_name}.info("slp");
 			SRV_URL_CB_INFO cbinfo;
 
-			Logger::String{"Searching for ",service_type}.info("slp");
 			err = SLPFindSrvs(
 						hSlp,
-						service_type,
+						service_name,
 						scope_list,
 						filter,
 						slpcallback,
@@ -176,149 +170,399 @@
 					);
 			if(err != SLP_OK) {
 
-				Logger::String{"SLPFindSrvs has failed"}.warning("slp");
+				throw runtime_error(_("SLPFindSrvs has failed"));
 
 			} else {
 
-				size_t prefix_length = strlen(service_type);
+				size_t prefix_length = strlen(service_name);
 				cbinfo.responses.remove_if([this,prefix_length](String &url){
 
 					const char *str = url.c_str();
-					if(strncmp(str,service_type,prefix_length)) {
-						Logger::String{"Ignoring invalid response '",url,"'"}.warning("slp");
+					if(strncmp(str,service_name,prefix_length)) {
+						Logger::String{"Ignoring invalid response '",url,"'"}.warning();
 						return true;
 					}
 
 					str += prefix_length;
 					if(*str != ':') {
-						Logger::String{"Ignoring unexpected response '",url,"'"}.warning("slp");
+						Logger::String{"Ignoring unexpected response '",url,"'"}.warning();
 						return true;
 					}
 
-					Logger::String{"Accepting valid response '",url,"'"}.trace("slp");
+					Logger::String{"Accepting valid response '",url,"'"}.trace();
 
 					return false;
 				});
 
 				if(cbinfo.responses.empty()) {
 
-					Logger::String{"No SLP response for ",service_type}.warning("slp");
+					throw runtime_error(Logger::String{"No SLP response for ",service_name});
 
 				} else {
 
-					Logger::String{cbinfo.responses.size()," SLP response(s) for ",service_type}.info("slp");
+					Logger::String{cbinfo.responses.size()," SLP response(s) for ",service_name}.info();
 
+					// Check responses
+					vector<IP::Address> ignored_adresses;
 					if(!allow_local) {
-
-						// Ignore local addresses.
-
-						vector<IP::Addresses> addresses; ///< @brief IP Addresses.
-						IP::for_each([&addresses](const IP::Addresses &addr){
-							addresses.push_back(addr);
+						IP::for_each([&ignored_adresses](const IP::Addresses &addr){
+							ignored_adresses.push_back(addr.address);
 							return false;
 						});
+					}
 
-						for(auto url=cbinfo.responses.begin(); url != cbinfo.responses.end() && this->query.url.empty(); url++) {
-
-							SLPSrvURL *parsedurl = NULL;
-							if(SLPParseSrvURL(url->c_str(),&parsedurl) != SLP_OK) {
-
-								Logger::String{"Cant parse ",url->c_str()}.error("slp");
-
-							} else if(parsedurl->s_pcHost && *parsedurl->s_pcHost) {
-
-								struct addrinfo *ai;
-								struct addrinfo hints;
-
-								memset(&hints,0,sizeof(hints));
-								hints.ai_family   = AF_UNSPEC;
-								hints.ai_socktype = SOCK_STREAM;
-								hints.ai_protocol = 0;
-								hints.ai_flags    = AI_NUMERICSERV;
-
-								string port;
-								if(parsedurl->s_iPort) {
-									port = std::to_string(parsedurl->s_iPort);
-								}
-
-								if(getaddrinfo(parsedurl->s_pcHost, port.c_str(), &hints, &ai)) {
-
-									Logger::String{"Error resolving ",parsedurl->s_pcHost}.error("slp");
-
-								} else {
-
-									for(auto rp = ai;rp != NULL && this->query.url.empty(); rp = rp->ai_next) {
-
-#if __cplusplus >= 201703L
-										sockaddr_storage addr{IP::Factory(rp->ai_addr)};
-#else
-										sockaddr_storage addr = IP::Factory(rp->ai_addr);
-#endif // C++17
-										bool remote = true;
-
-										for(IP::Addresses &local : addresses) {
-											if(local.address == addr) {
-												remote = false;
-												Logger::String {"Ignoring response ",std::to_string(addr)}.trace("slpclient");
-											}
-										}
-
-										if(remote) {
-											extract_url_from_response(*url, this->query.url);
-										}
-									}
-
-									freeaddrinfo(ai);
-								}
-
-								SLPFree(parsedurl);
-
-							} else {
-
-								Logger::String{"Ignoring response '",*url,"'"}.info("slp");
-
-							}
-
+					for(const auto &response : cbinfo.responses) {
+						
+						SLPSrvURL *parsed = NULL;
+						if(SLPParseSrvURL(response.c_str(),&parsed) != SLP_OK) {
+							Logger::String{"Cant parse '",response.c_str(),"'"}.warning();
+							continue;
 						}
 
-					} else {
+						string port;
+						if(parsed->s_iPort) {
+							port = std::to_string(parsed->s_iPort);
+						}
 
-						// Get first address.
-						for(String &response : cbinfo.responses) {
-
-							SLPSrvURL *parsedurl = NULL;
-							if(SLPParseSrvURL(response.c_str(),&parsedurl) != SLP_OK) {
-
-								Logger::String{"Cant parse ",response.c_str()}.error("slp");
-
-							} else {
-
-								extract_url_from_response(response, this->query.url);
-
-								SLPFree(parsedurl);
-
-								if(!this->query.url.empty()) {
-									break;
+						if(Socket::for_each(parsed->s_pcHost,port.c_str(),[this,ignored_adresses](const sockaddr_storage &addr){
+			
+							IP::Address ipaddr{addr};
+							for(const auto &ignored : ignored_adresses) {
+								if(ipaddr == ignored) {
+									Logger::String{"Ignoring response ",ipaddr.to_string().c_str()}.trace();
+									return false;
 								}
 							}
 
-						}
+							Logger::String{"Accepting response ",ipaddr.to_string().c_str()}.trace();
 
+
+							return false;
+						})) {							
+							break;
+						}
 					}
 
 				}
 
 			}
 
+		} catch(...) {
+
 			SLPClose(hSlp);
-			status.busy(false);
-			query.done = true;
+			progress->failed();
+			throw;
 
 		}
-#endif // HAVE_LIBSLP
 
-		return query.url.c_str();
+		SLPClose(hSlp);
+		progress->success();
+		return detected;
+
 	}
 
  }
+ #endif // HAVE_LIBSLP
+
+
+//  #include <config.h>
+//  #include <udjat/defs.h>
+//  #include <udjat/tools/properties.h>
+//  #include <udjat/tools/object.h>
+//  #include <udjat/tools/intl.h>
+//  #include <udjat/ui/status.h>
+//  #include <mutex>
+//  #include <udjat/net/ip/address.h>
+//  #include <sys/types.h>
+//  #include <sys/socket.h>
+//  #include <netdb.h>
+
+//  #ifdef HAVE_LIBSLP
+// 	#include <slp.h>
+//  #endif // HAVE_LIBSLP
+
+//  #include <unistd.h>
+//  #include <list>
+
+//  #include <private/slpclient.h>
+
+//  using namespace Udjat;
+//  using namespace std;
+
+//  namespace IsoWriter {
+
+// 	SLPClient::SLPClient(const Udjat::Properties &node) 
+// 		: service_type{node["slp-service-type"].as_quark()},
+// 		 	scope_list{node["slp-scope-list"].as_quark()},
+// 		 	filter{node["slp-filter"].as_quark()},
+// 			message{node.get("slp-search-message",service_type).as_quark()},
+// 			allow_local{node.get("slp-allow-local",false)}
+// 	{
+// 	}
+
+// 	bool SLPClient::operator==(const SLPClient &b) const noexcept {
+// 		return service_type == b.service_type && scope_list == b.scope_list && filter == b.filter && allow_local == b.allow_local;
+// 	}
+
+// 	static std::shared_ptr<SLPClient> cache(std::shared_ptr<SLPClient> client) {
+
+// 		static mutex guard;
+// 		lock_guard<mutex> lock(guard);
+
+// 		static list<std::shared_ptr<SLPClient>> clients;
+
+// 		for(auto cached : clients) {
+// 			if(*cached == *client) {
+// 				return cached;
+// 			}
+// 		}
+
+// 		clients.push_back(client);
+
+// 		return client;
+
+// 	}
+
+// 	std::shared_ptr<SLPClient> SLPClient::Factory(const Udjat::Properties &node) {
+// 		return cache(std::make_shared<SLPClient>(node));
+// 	}
+
+// 	void SLPClient::clear() noexcept {
+// 		if(service_type && *service_type) {
+// 			Logger::String{"Search for '",service_type,"' was disabled"}.info("slpclient");
+// 		}
+// 		service_type = "";
+// 		scope_list = "";
+// 		filter = "";
+// 		query.url.clear();
+// 		query.done = true;
+// 	}
+
+//  #ifdef HAVE_LIBSLP
+
+// 	struct SRV_URL_CB_INFO  {
+// 		SLPError callbackerr;
+// 		list<String> responses;
+// 	};
+
+// 	static SLPBoolean slpcallback( SLPHandle, const char* srvurl, unsigned short, SLPError errcode, void *cookie ) {
+
+// 		// http://www.openslp.org/doc/html/ProgrammersGuide/SLPFindSrvs.html
+
+// 		if(errcode == SLP_OK || errcode == SLP_LAST_CALL) {
+
+// 			if(srvurl && *srvurl) {
+// 				Logger::String{"Got response '",srvurl,"'"}.trace("slp");
+// 				((SRV_URL_CB_INFO *) cookie)->responses.emplace_back(srvurl);
+// 			}
+
+// 			((SRV_URL_CB_INFO *) cookie)->callbackerr = SLP_OK;
+
+// 		} else {
+
+// 			Logger::String{"Got error '",errcode,"' on query"}.error("slp");
+// 			((SRV_URL_CB_INFO *) cookie)->callbackerr = errcode;
+
+// 		}
+
+// 		return SLP_TRUE;
+
+// 	}
+
+// 	static void extract_url_from_response(const std::string &from, std::string &to) {
+
+// 		const char *ptr = from.c_str();
+// 		for(size_t ix = 0; ix < 2; ix++) {
+// 			ptr = strchr(ptr,':');
+// 			if(!ptr) {
+// 				Logger::String{"Rejecting bad formatted response '",from,"'"}.warning("slp");
+// 			}
+// 			ptr++;
+// 		}
+
+// 		to.assign(ptr);
+
+// 	}
+// #endif // HAVE_LIBSLP
+
+// 	const char * SLPClient::url() {
+
+// 		static mutex guard;
+// 		lock_guard<mutex> lock(guard);
+
+// #ifdef HAVE_LIBSLP
+// 		if(service_type && *service_type && !query.done) {
+
+// 			auto &status = Dialog::Status::getInstance();
+// 			status.busy(message);
+
+// 			// https://github.com/ManageIQ/slp/blob/master/examples/raw_example.c
+// 			// https://docs.oracle.com/cd/E19455-01/806-0628/6j9vie80v/index.html
+// 			SLPError err;
+// 			SLPHandle hSlp;
+
+// 			err = SLPOpen(NULL, SLP_FALSE, &hSlp);
+// 			if(err != SLP_OK) {
+// 				Logger::String{"SLPOpen has failed"}.warning("slp");
+// 				return "";
+// 			}
+
+// 			SRV_URL_CB_INFO cbinfo;
+
+// 			Logger::String{"Searching for ",service_type}.info("slp");
+// 			err = SLPFindSrvs(
+// 						hSlp,
+// 						service_type,
+// 						scope_list,
+// 						filter,
+// 						slpcallback,
+// 						&cbinfo
+// 					);
+// 			if(err != SLP_OK) {
+
+// 				Logger::String{"SLPFindSrvs has failed"}.warning("slp");
+
+// 			} else {
+
+// 				size_t prefix_length = strlen(service_type);
+// 				cbinfo.responses.remove_if([this,prefix_length](String &url){
+
+// 					const char *str = url.c_str();
+// 					if(strncmp(str,service_type,prefix_length)) {
+// 						Logger::String{"Ignoring invalid response '",url,"'"}.warning("slp");
+// 						return true;
+// 					}
+
+// 					str += prefix_length;
+// 					if(*str != ':') {
+// 						Logger::String{"Ignoring unexpected response '",url,"'"}.warning("slp");
+// 						return true;
+// 					}
+
+// 					Logger::String{"Accepting valid response '",url,"'"}.trace("slp");
+
+// 					return false;
+// 				});
+
+// 				if(cbinfo.responses.empty()) {
+
+// 					Logger::String{"No SLP response for ",service_type}.warning("slp");
+
+// 				} else {
+
+// 					Logger::String{cbinfo.responses.size()," SLP response(s) for ",service_type}.info("slp");
+
+// 					if(!allow_local) {
+
+// 						// Ignore local addresses.
+
+// 						vector<IP::Addresses> addresses; ///< @brief IP Addresses.
+// 						IP::for_each([&addresses](const IP::Addresses &addr){
+// 							addresses.push_back(addr);
+// 							return false;
+// 						});
+
+// 						for(auto url=cbinfo.responses.begin(); url != cbinfo.responses.end() && this->query.url.empty(); url++) {
+
+// 							SLPSrvURL *parsedurl = NULL;
+// 							if(SLPParseSrvURL(url->c_str(),&parsedurl) != SLP_OK) {
+
+// 								Logger::String{"Cant parse ",url->c_str()}.error("slp");
+
+// 							} else if(parsedurl->s_pcHost && *parsedurl->s_pcHost) {
+
+// 								struct addrinfo *ai;
+// 								struct addrinfo hints;
+
+// 								memset(&hints,0,sizeof(hints));
+// 								hints.ai_family   = AF_UNSPEC;
+// 								hints.ai_socktype = SOCK_STREAM;
+// 								hints.ai_protocol = 0;
+// 								hints.ai_flags    = AI_NUMERICSERV;
+
+// 								string port;
+// 								if(parsedurl->s_iPort) {
+// 									port = std::to_string(parsedurl->s_iPort);
+// 								}
+
+// 								if(getaddrinfo(parsedurl->s_pcHost, port.c_str(), &hints, &ai)) {
+
+// 									Logger::String{"Error resolving ",parsedurl->s_pcHost}.error("slp");
+
+// 								} else {
+
+// 									for(auto rp = ai;rp != NULL && this->query.url.empty(); rp = rp->ai_next) {
+
+// #if __cplusplus >= 201703L
+// 										sockaddr_storage addr{IP::Factory(rp->ai_addr)};
+// #else
+// 										sockaddr_storage addr = IP::Factory(rp->ai_addr);
+// #endif // C++17
+// 										bool remote = true;
+
+// 										for(IP::Addresses &local : addresses) {
+// 											if(local.address == addr) {
+// 												remote = false;
+// 												Logger::String {"Ignoring response ",std::to_string(addr)}.trace("slpclient");
+// 											}
+// 										}
+
+// 										if(remote) {
+// 											extract_url_from_response(*url, this->query.url);
+// 										}
+// 									}
+
+// 									freeaddrinfo(ai);
+// 								}
+
+// 								SLPFree(parsedurl);
+
+// 							} else {
+
+// 								Logger::String{"Ignoring response '",*url,"'"}.info("slp");
+
+// 							}
+
+// 						}
+
+// 					} else {
+
+// 						// Get first address.
+// 						for(String &response : cbinfo.responses) {
+
+// 							SLPSrvURL *parsedurl = NULL;
+// 							if(SLPParseSrvURL(response.c_str(),&parsedurl) != SLP_OK) {
+
+// 								Logger::String{"Cant parse ",response.c_str()}.error("slp");
+
+// 							} else {
+
+// 								extract_url_from_response(response, this->query.url);
+
+// 								SLPFree(parsedurl);
+
+// 								if(!this->query.url.empty()) {
+// 									break;
+// 								}
+// 							}
+
+// 						}
+
+// 					}
+
+// 				}
+
+// 			}
+
+// 			SLPClose(hSlp);
+// 			status.busy(false);
+// 			query.done = true;
+
+// 		}
+// #endif // HAVE_LIBSLP
+
+// 		return query.url.c_str();
+// 	}
+
+//  }
 

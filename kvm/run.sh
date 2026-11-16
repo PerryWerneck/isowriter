@@ -11,6 +11,8 @@ if [ -z ${LIBVIRT_DEFAULT_URI} ]; then
 	exit -1
 fi
 
+virsh destroy reinstall 2> /dev/null
+
 meson compile -C .build
 if [ "$?" != "0" ]; then
 	exit $?
@@ -26,6 +28,8 @@ fi
 if [ "$?" != "0" ]; then
 	exit $?
 fi
+
+chmod 666 ${ISONAME}
 
 sudo qemu-img \
 	create \
