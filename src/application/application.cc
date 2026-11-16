@@ -41,6 +41,10 @@
 	#include <libisofs/libisofs.h> 
  #endif // HAVE_LIBISOFS
 
+ #ifdef HAVE_LIBSLP
+	#include <private/slpclient.h>
+ #endif // HAVE_LIBSLP
+
  using namespace Udjat;
  using namespace std;
 
@@ -61,6 +65,10 @@
 			throw runtime_error(_("Unexpected error initializing isofs"));
 		}
 #endif // HAVE_LIBISOFS
+
+#ifdef HAVE_LIBSLP
+		SLPClient::init();
+#endif // HAVE_LIBSLP
 
 #ifdef STATIC_MODULES
 		//

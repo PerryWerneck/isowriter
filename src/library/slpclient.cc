@@ -89,7 +89,7 @@
 
 			debug("Target URL: '",reference.c_str(),"'");
 
-			throw runtime_error("Incomplete");
+			return reference.handler();
 		}
 
 		static Controller & get_instance() {
